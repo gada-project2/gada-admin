@@ -104,7 +104,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof historyControllerGetMyHistory>>> = ({ signal }) => historyControllerGetMyHistory(params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof historyControllerGetMyHistory>>> = ({ signal }) => historyControllerGetMyHistory(params, { signal });
 
       
 
@@ -223,7 +223,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof historyControllerGetMyNotes>>> = ({ signal }) => historyControllerGetMyNotes(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof historyControllerGetMyNotes>>> = ({ signal }) => historyControllerGetMyNotes({ signal });
 
       
 
@@ -352,7 +352,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof historyControllerGetEventHistory>>> = ({ signal }) => historyControllerGetEventHistory(gadaringId, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof historyControllerGetEventHistory>>> = ({ signal }) => historyControllerGetEventHistory(gadaringId, { signal });
 
       
 
@@ -471,7 +471,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof historyControllerGetNotesForEvent>>> = ({ signal }) => historyControllerGetNotesForEvent(gadaringId, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof historyControllerGetNotesForEvent>>> = ({ signal }) => historyControllerGetNotesForEvent(gadaringId, { signal });
 
       
 

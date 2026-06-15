@@ -105,7 +105,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof volunteersControllerGetVolunteerConfig>>> = ({ signal }) => volunteersControllerGetVolunteerConfig(gadaringId, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof volunteersControllerGetVolunteerConfig>>> = ({ signal }) => volunteersControllerGetVolunteerConfig(gadaringId, { signal });
 
       
 
@@ -765,7 +765,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof volunteersControllerGetApplicationsForEvent>>> = ({ signal }) => volunteersControllerGetApplicationsForEvent(gadaringId,params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof volunteersControllerGetApplicationsForEvent>>> = ({ signal }) => volunteersControllerGetApplicationsForEvent(gadaringId,params, { signal });
 
       
 
@@ -902,7 +902,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof volunteersControllerGetApplicationDetail>>> = ({ signal }) => volunteersControllerGetApplicationDetail(gadaringId,appId, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof volunteersControllerGetApplicationDetail>>> = ({ signal }) => volunteersControllerGetApplicationDetail(gadaringId,appId, { signal });
 
       
 
@@ -1146,7 +1146,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof volunteersControllerGetMyApplications>>> = ({ signal }) => volunteersControllerGetMyApplications(params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof volunteersControllerGetMyApplications>>> = ({ signal }) => volunteersControllerGetMyApplications(params, { signal });
 
       
 

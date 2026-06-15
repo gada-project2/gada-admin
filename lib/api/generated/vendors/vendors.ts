@@ -99,7 +99,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof vendorsControllerGetVendors>>> = ({ signal }) => vendorsControllerGetVendors(params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof vendorsControllerGetVendors>>> = ({ signal }) => vendorsControllerGetVendors(params, { signal });
 
       
 
@@ -223,7 +223,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof vendorsControllerGetMyVendorProfile>>> = ({ signal }) => vendorsControllerGetMyVendorProfile(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof vendorsControllerGetMyVendorProfile>>> = ({ signal }) => vendorsControllerGetMyVendorProfile({ signal });
 
       
 
@@ -554,7 +554,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof vendorsControllerGetVendorById>>> = ({ signal }) => vendorsControllerGetVendorById(id, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof vendorsControllerGetVendorById>>> = ({ signal }) => vendorsControllerGetVendorById(id, { signal });
 
       
 

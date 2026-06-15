@@ -206,7 +206,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof paymentsControllerVerifyPayment>>> = ({ signal }) => paymentsControllerVerifyPayment(reference, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof paymentsControllerVerifyPayment>>> = ({ signal }) => paymentsControllerVerifyPayment(reference, { signal });
 
       
 
@@ -505,7 +505,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof paymentsControllerGetPaymentHistory>>> = ({ signal }) => paymentsControllerGetPaymentHistory(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof paymentsControllerGetPaymentHistory>>> = ({ signal }) => paymentsControllerGetPaymentHistory({ signal });
 
       
 

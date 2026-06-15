@@ -197,7 +197,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof storageControllerGetPresignedDownloadUrl>>> = ({ signal }) => storageControllerGetPresignedDownloadUrl(key, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof storageControllerGetPresignedDownloadUrl>>> = ({ signal }) => storageControllerGetPresignedDownloadUrl(key, { signal });
 
       
 

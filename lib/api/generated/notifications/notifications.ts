@@ -103,7 +103,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof notificationsControllerGetMyNotifications>>> = ({ signal }) => notificationsControllerGetMyNotifications(params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof notificationsControllerGetMyNotifications>>> = ({ signal }) => notificationsControllerGetMyNotifications(params, { signal });
 
       
 
@@ -222,7 +222,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof notificationsControllerGetUnreadCount>>> = ({ signal }) => notificationsControllerGetUnreadCount(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof notificationsControllerGetUnreadCount>>> = ({ signal }) => notificationsControllerGetUnreadCount({ signal });
 
       
 

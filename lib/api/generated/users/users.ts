@@ -99,7 +99,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof usersControllerGetMyProfile>>> = ({ signal }) => usersControllerGetMyProfile(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof usersControllerGetMyProfile>>> = ({ signal }) => usersControllerGetMyProfile({ signal });
 
       
 
@@ -500,7 +500,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof usersControllerGetIceContacts>>> = ({ signal }) => usersControllerGetIceContacts(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof usersControllerGetIceContacts>>> = ({ signal }) => usersControllerGetIceContacts({ signal });
 
       
 
@@ -820,7 +820,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof usersControllerGetVolunteerProfile>>> = ({ signal }) => usersControllerGetVolunteerProfile(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof usersControllerGetVolunteerProfile>>> = ({ signal }) => usersControllerGetVolunteerProfile({ signal });
 
       
 
@@ -1035,7 +1035,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof usersControllerGetPrivacySettings>>> = ({ signal }) => usersControllerGetPrivacySettings(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof usersControllerGetPrivacySettings>>> = ({ signal }) => usersControllerGetPrivacySettings({ signal });
 
       
 

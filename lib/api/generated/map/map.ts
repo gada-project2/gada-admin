@@ -203,7 +203,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof mapControllerGetIceLocation>>> = ({ signal }) => mapControllerGetIceLocation(userId, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof mapControllerGetIceLocation>>> = ({ signal }) => mapControllerGetIceLocation(userId, { signal });
 
       
 
@@ -423,7 +423,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof mapControllerGetPendingFindMeRequests>>> = ({ signal }) => mapControllerGetPendingFindMeRequests(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof mapControllerGetPendingFindMeRequests>>> = ({ signal }) => mapControllerGetPendingFindMeRequests({ signal });
 
       
 

@@ -104,7 +104,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof gadaringsControllerFindPublicGadarings>>> = ({ signal }) => gadaringsControllerFindPublicGadarings(params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof gadaringsControllerFindPublicGadarings>>> = ({ signal }) => gadaringsControllerFindPublicGadarings(params, { signal });
 
       
 
@@ -324,7 +324,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof gadaringsControllerGetTrending>>> = ({ signal }) => gadaringsControllerGetTrending(params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof gadaringsControllerGetTrending>>> = ({ signal }) => gadaringsControllerGetTrending(params, { signal });
 
       
 
@@ -443,7 +443,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof gadaringsControllerGetSponsored>>> = ({ signal }) => gadaringsControllerGetSponsored(params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof gadaringsControllerGetSponsored>>> = ({ signal }) => gadaringsControllerGetSponsored(params, { signal });
 
       
 
@@ -574,7 +574,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof gadaringsControllerFindMyGadarings>>> = ({ signal }) => gadaringsControllerFindMyGadarings(params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof gadaringsControllerFindMyGadarings>>> = ({ signal }) => gadaringsControllerFindMyGadarings(params, { signal });
 
       
 
@@ -693,7 +693,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof gadaringsControllerFindOne>>> = ({ signal }) => gadaringsControllerFindOne(id, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof gadaringsControllerFindOne>>> = ({ signal }) => gadaringsControllerFindOne(id, { signal });
 
       
 
@@ -1351,7 +1351,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof gadaringsControllerGetAssignees>>> = ({ signal }) => gadaringsControllerGetAssignees(id, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof gadaringsControllerGetAssignees>>> = ({ signal }) => gadaringsControllerGetAssignees(id, { signal });
 
       
 
@@ -1684,7 +1684,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof gadaringsControllerGetPingPoints>>> = ({ signal }) => gadaringsControllerGetPingPoints(id, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof gadaringsControllerGetPingPoints>>> = ({ signal }) => gadaringsControllerGetPingPoints(id, { signal });
 
       
 

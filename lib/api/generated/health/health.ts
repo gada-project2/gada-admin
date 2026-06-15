@@ -76,7 +76,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof appControllerHealth>>> = ({ signal }) => appControllerHealth(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof appControllerHealth>>> = ({ signal }) => appControllerHealth({ signal });
 
       
 

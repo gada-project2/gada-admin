@@ -120,7 +120,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof chatControllerGetCircleMessages>>> = ({ signal }) => chatControllerGetCircleMessages(id,params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof chatControllerGetCircleMessages>>> = ({ signal }) => chatControllerGetCircleMessages(id,params, { signal });
 
       
 
@@ -264,7 +264,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof chatControllerGetEventMessages>>> = ({ signal }) => chatControllerGetEventMessages(id,params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof chatControllerGetEventMessages>>> = ({ signal }) => chatControllerGetEventMessages(id,params, { signal });
 
       
 
@@ -387,7 +387,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof chatControllerGetDmList>>> = ({ signal }) => chatControllerGetDmList(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof chatControllerGetDmList>>> = ({ signal }) => chatControllerGetDmList({ signal });
 
       
 
@@ -522,7 +522,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof chatControllerGetDmThread>>> = ({ signal }) => chatControllerGetDmThread(userId,params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof chatControllerGetDmThread>>> = ({ signal }) => chatControllerGetDmThread(userId,params, { signal });
 
       
 
@@ -966,7 +966,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof chatControllerGetPollResults>>> = ({ signal }) => chatControllerGetPollResults(pollId, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof chatControllerGetPollResults>>> = ({ signal }) => chatControllerGetPollResults(pollId, { signal });
 
       
 

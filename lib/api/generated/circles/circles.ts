@@ -97,7 +97,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof circlesControllerGetMyCircles>>> = ({ signal }) => circlesControllerGetMyCircles(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof circlesControllerGetMyCircles>>> = ({ signal }) => circlesControllerGetMyCircles({ signal });
 
       
 
@@ -322,7 +322,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof circlesControllerGetCircle>>> = ({ signal }) => circlesControllerGetCircle(id, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof circlesControllerGetCircle>>> = ({ signal }) => circlesControllerGetCircle(id, { signal });
 
       
 
@@ -972,7 +972,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof circlesControllerGetMediaShared>>> = ({ signal }) => circlesControllerGetMediaShared(id, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof circlesControllerGetMediaShared>>> = ({ signal }) => circlesControllerGetMediaShared(id, { signal });
 
       
 

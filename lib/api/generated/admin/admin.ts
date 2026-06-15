@@ -296,7 +296,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetMe>>> = ({ signal }) => adminControllerGetMe(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetMe>>> = ({ signal }) => adminControllerGetMe({ signal });
 
       
 
@@ -415,7 +415,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetDashboardStats>>> = ({ signal }) => adminControllerGetDashboardStats(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetDashboardStats>>> = ({ signal }) => adminControllerGetDashboardStats({ signal });
 
       
 
@@ -541,7 +541,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetEventChartData>>> = ({ signal }) => adminControllerGetEventChartData(params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetEventChartData>>> = ({ signal }) => adminControllerGetEventChartData(params, { signal });
 
       
 
@@ -660,7 +660,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetUserGrowthChart>>> = ({ signal }) => adminControllerGetUserGrowthChart(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetUserGrowthChart>>> = ({ signal }) => adminControllerGetUserGrowthChart({ signal });
 
       
 
@@ -786,7 +786,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetEvents>>> = ({ signal }) => adminControllerGetEvents(params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetEvents>>> = ({ signal }) => adminControllerGetEvents(params, { signal });
 
       
 
@@ -910,7 +910,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetEventDetail>>> = ({ signal }) => adminControllerGetEventDetail(id, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetEventDetail>>> = ({ signal }) => adminControllerGetEventDetail(id, { signal });
 
       
 
@@ -1338,7 +1338,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetUsers>>> = ({ signal }) => adminControllerGetUsers(params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetUsers>>> = ({ signal }) => adminControllerGetUsers(params, { signal });
 
       
 
@@ -1464,7 +1464,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetConveners>>> = ({ signal }) => adminControllerGetConveners(params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetConveners>>> = ({ signal }) => adminControllerGetConveners(params, { signal });
 
       
 
@@ -1875,7 +1875,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetVendors>>> = ({ signal }) => adminControllerGetVendors(params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetVendors>>> = ({ signal }) => adminControllerGetVendors(params, { signal });
 
       
 
@@ -2301,7 +2301,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetTickets>>> = ({ signal }) => adminControllerGetTickets(params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetTickets>>> = ({ signal }) => adminControllerGetTickets(params, { signal });
 
       
 
@@ -2427,7 +2427,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetVolunteers>>> = ({ signal }) => adminControllerGetVolunteers(params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetVolunteers>>> = ({ signal }) => adminControllerGetVolunteers(params, { signal });
 
       
 
@@ -2653,7 +2653,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetAdminNotifications>>> = ({ signal }) => adminControllerGetAdminNotifications(params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetAdminNotifications>>> = ({ signal }) => adminControllerGetAdminNotifications(params, { signal });
 
       
 
@@ -2980,7 +2980,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetCalendarData>>> = ({ signal }) => adminControllerGetCalendarData(params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetCalendarData>>> = ({ signal }) => adminControllerGetCalendarData(params, { signal });
 
       
 
@@ -3104,7 +3104,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetAdmins>>> = ({ signal }) => adminControllerGetAdmins(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetAdmins>>> = ({ signal }) => adminControllerGetAdmins({ signal });
 
       
 

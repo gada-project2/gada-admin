@@ -18,8 +18,10 @@ export default defineConfig({
           name: 'customInstance',
         },
         // Don't generate a default query-client — we supply our own in providers.tsx
-        useQuery: true,
-        useMutation: true,
+        query: {
+          useQuery: true,
+          useMutation: true,
+        },
       },
     },
   },

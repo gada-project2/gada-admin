@@ -98,7 +98,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof ticketsControllerGetTicketsByGadaring>>> = ({ signal }) => ticketsControllerGetTicketsByGadaring(gadaringId, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof ticketsControllerGetTicketsByGadaring>>> = ({ signal }) => ticketsControllerGetTicketsByGadaring(gadaringId, { signal });
 
       
 
@@ -764,7 +764,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof ticketsControllerGetMyTickets>>> = ({ signal }) => ticketsControllerGetMyTickets(params, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof ticketsControllerGetMyTickets>>> = ({ signal }) => ticketsControllerGetMyTickets(params, { signal });
 
       
 
@@ -893,7 +893,7 @@ const {query: queryOptions} = options ?? {};
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof ticketsControllerGetTicketDetail>>> = ({ signal }) => ticketsControllerGetTicketDetail(purchaseId, signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof ticketsControllerGetTicketDetail>>> = ({ signal }) => ticketsControllerGetTicketDetail(purchaseId, { signal });
 
       
 
