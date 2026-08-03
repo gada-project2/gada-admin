@@ -1,270 +1,321 @@
-// Hand-written from live API introspection — do not replace with generated code.
+// Hand-written response types for the admin surface.
+//
+// WHY THESE ARE HAND-WRITTEN: the live OpenAPI spec at
+// https://api.gadaapp.com/v1/docs-json declares ZERO response content schemas for
+// all 26 admin operations — every response is documented as `{ "200": { "description": "" } }`.
+// Orval therefore generates `unknown` for every admin return type. These interfaces
+// were captured empirically against production on 2026-08-02 and are the only
+// source of response typing the app has.
+//
+// Delete these and switch to generated types only once the backend adds response
+// schemas (e.g. @ApiOkResponse({ type: ... })) to the admin controllers.
 
 export interface PaginationMeta {
   page: number;
   perPage: number;
   total: number;
+  // NOT returned by the API — derived in lib/api/client.ts from total/perPage.
   totalPages: number;
 }
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
+// GET /v1/admin/dashboard/stats — verified 2026-08-02. Flat object, not nested.
 
 export interface DashboardStats {
-  users: {
-    total: number;
-    conveners: number;
-    vendors: number;
-    volunteers: number;
-  };
-  gadarings: {
-    total: number;
-    active: number;
-    past: number;
-    upcoming: number;
-  };
-  tickets: {
-    totalPurchases: number;
-  };
-  reviews: {
-    pending: number;
-  };
-  revenue: {
-    totalKobo: number;
-  };
+  totalUsers: number;
+  totalEvents: number;
+  publishedEvents: number;
+  totalRevenue: number; // kobo
+  revenueNaira: number;
+  activeVendors: number;
+  pendingVolunteers: number;
+  checkedInToday: number;
+  newUsersToday: number;
+  newEventsToday: number;
 }
 
-// chart/events: single object with event counts by state
-export interface EventChartData {
-  active: number;
-  past: number;
-  upcoming: number;
-  total: number;
+// ─── Charts ───────────────────────────────────────────────────────────────────
+// All four chart endpoints take a required `days` query param and return a
+// day-by-day time series (one entry per day, ascending). Verified 2026-08-02.
+
+export interface CountPoint {
+  date: string; // YYYY-MM-DD
+  count: number;
 }
 
-// chart/users: 12-item array, one entry per calendar month
-export interface UserGrowthDataPoint {
-  month: number; // 1–12
-  users: number;
-  conveners: number;
-  vendors: number;
+// GET /v1/admin/dashboard/chart/events  and  /chart/users
+export type EventChartData = CountPoint[];
+export type UserGrowthChartData = CountPoint[];
+
+// GET /v1/admin/dashboard/chart/tickets
+export interface TicketChartPoint {
+  date: string;
+  tickets: number;
+  revenueKobo: number;
+  revenueNaira: number;
+}
+export type TicketChartData = TicketChartPoint[];
+
+// GET /v1/admin/dashboard/chart/revenue
+export interface RevenuePoint {
+  date: string;
+  revenueKobo: number;
+  revenueNaira: number;
+}
+export type RevenueChartData = RevenuePoint[];
+
+// ─── Events ───────────────────────────────────────────────────────────────────
+// NOTE: the admin approval workflow was REMOVED from the API. There is no
+// `adminStatus` field and no approve/decline endpoint. `status` below is the
+// event's own lifecycle state, and the only admin actions are suspend + delete.
+
+export type AdminEventStatus =
+  | 'DRAFT'
+  | 'PUBLISHED'
+  | 'CANCELLED'
+  | 'SUSPENDED'
+  | 'COMPLETED';
+
+export type AdminEventCategory =
+  | 'FAITH'
+  | 'EDUCATION'
+  | 'PARTY'
+  | 'TECH'
+  | 'BUSINESS'
+  | 'COMMUNITY';
+
+export interface EventConvener {
+  id: string;
+  displayName: string;
+  email: string;
 }
 
-export type UserGrowthChartData = UserGrowthDataPoint[];
-
-// ─── Events list ──────────────────────────────────────────────────────────────
-
-export type AdminEventStatus = 'DRAFT' | 'UPCOMING' | 'ONGOING' | 'PAST';
-export type AdminStatus = 'PENDING' | 'APPROVED' | 'DECLINED';
-
+// GET /v1/admin/events — list rows are full event records plus a convener object.
 export interface AdminEventSummary {
   id: string;
-  title: string;
+  convenerId: string;
+  name: string;
+  description: string | null;
+  category: AdminEventCategory | string;
+  type: string; // PUBLIC | PRIVATE
   status: AdminEventStatus;
-  adminStatus: AdminStatus;
-  createdAt: string;
+  bannerKey: string | null;
+  venue: string | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  latitude: number | null;
+  longitude: number | null;
   startDate: string;
-  endDate?: string;
-  convener?: {
-    id: string;
-    name: string;
-    email: string;
-    phone?: string;
-  };
+  endDate: string | null;
+  timezone: string | null;
+  maxAttendees: number | null;
+  isSponsored: boolean;
+  requiresApproval: boolean;
+  ticketsSold: number;
+  checkedInCount: number;
+  interestedCount: number;
+  totalRevenue: number; // kobo
+  createdAt: string;
+  updatedAt: string;
+  cancelledAt: string | null;
+  publishedAt: string | null;
+  convener: EventConvener | null;
 }
 
-// Paginated events list — customInstance returns { data, meta } when meta present
 export interface AdminEventsListResponse {
   data: AdminEventSummary[];
   meta: PaginationMeta;
 }
 
-// ─── Event detail ─────────────────────────────────────────────────────────────
-
-export interface AdminTicket {
+// GET /v1/admin/events/{id} — same as the list row plus ticket tiers.
+export interface AdminEventTicketTier {
   id: string;
+  eventId: string;
   name: string;
+  description: string | null;
+  type: 'FREE' | 'PAID' | string;
+  priceKobo: number;
   quantity: number;
-  price: number; // in kobo (0 = free)
-  ticketCategory?: string; // SINGLE | GROUP | etc.
+  sold: number;
 }
 
-export interface AdminAssignee {
-  id: string;
-  name: string;
-  role: string;
-}
-
-export interface AdminEventDetail {
-  id: string;
-  title: string;
-  description?: string;
-  coverImage?: string;
-  status: AdminEventStatus;
-  adminStatus: AdminStatus;
-  ticketType?: 'FREE' | 'PAID';
-  startDate: string;
-  endDate?: string;
-  location?: {
-    address?: string;
-    lat?: number;
-    lng?: number;
-  };
-  convener?: {
-    id: string;
-    name: string;
-    email: string;
-    phone?: string;
-  };
-  tickets?: AdminTicket[];
-  assignees?: AdminAssignee[];
-  createdAt: string;
+export interface AdminEventDetail extends AdminEventSummary {
+  dressCode: string | null;
+  additionalInfo: string | null;
+  isRecurring: boolean;
+  recurrenceRule: string | null;
+  parentEventId: string | null;
+  tickets: AdminEventTicketTier[];
 }
 
 // ─── Calendar ─────────────────────────────────────────────────────────────────
+// GET /v1/admin/calendar?month=YYYY-MM&status= — flat array, no envelope meta.
 
 export interface CalendarEventItem {
   id: string;
-  title: string;
+  name: string;
+  status: AdminEventStatus;
   startDate: string;
-  endDate?: string;
-  status?: AdminEventStatus;
-  adminStatus?: AdminStatus;
+  endDate: string | null;
+  venue: string | null;
 }
 
-export interface CalendarData {
-  events: CalendarEventItem[];
-  pendingRequests: CalendarEventItem[];
-}
-
-// ─── Tickets ──────────────────────────────────────────────────────────────────
-// Live endpoint GET /v1/admin/tickets returned empty list (dev env).
-// Fields typed from spec docstring: "ticket tier, purchase price (in kobo), payment provider,
-// check-in status; searchable by ticket holder name or event name."
-// All fields marked // unverified-from-spec — remove comments once live data confirms.
-// Confirmed params: search ✅, startDate/endDate ✅; status param → 500 (not exposed).
-// No ticket mutations in spec — screen is READ-ONLY.
-
-export interface TicketPurchase {
-  id: string;                         // unverified-from-spec
-  buyerName?: string;                 // unverified-from-spec ("ticket holder name")
-  buyerEmail?: string;                // unverified-from-spec
-  eventTitle?: string;                // unverified-from-spec ("event name")
-  eventId?: string;                   // unverified-from-spec
-  ticketName?: string;                // unverified-from-spec ("ticket tier")
-  ticketType?: string;                // unverified-from-spec (REGULAR | VIP | TABLE | etc.)
-  price: number;                      // unverified-from-spec — KOBO, divide by 100 for naira
-  paymentProvider?: string;           // unverified-from-spec
-  checkedIn?: boolean;                // unverified-from-spec ("check-in status")
-  status?: string;                    // unverified-from-spec
-  createdAt: string;                  // unverified-from-spec
-}
-
-// Paginated ticket purchase list — customInstance returns { data, meta } at envelope level
-export interface TicketListResponse {
-  data: TicketPurchase[];
-  meta: PaginationMeta;
-}
+export type CalendarData = CalendarEventItem[];
 
 // ─── Conveners ────────────────────────────────────────────────────────────────
-// Live endpoint GET /v1/admin/users/conveners returned empty list (dev env).
-// Fields typed from spec docstrings + event convener sub-object shape.
-// All fields marked // unverified-from-spec — remove comments once live data confirms.
-// Spec note: endpoint is "always filtered to ACTIVE status"; no status filter dropdown.
-
-export type ConvenerStatus = 'ACTIVE' | 'SUSPENDED'; // unverified-from-spec
+// GET /v1/admin/users/conveners — aggregate rows, NOT full user records.
 
 export interface Convener {
-  id: string;                  // unverified-from-spec
-  name: string;                // unverified-from-spec
-  email: string;               // unverified-from-spec
-  phone?: string;              // unverified-from-spec
-  status: ConvenerStatus;      // unverified-from-spec
-  createdAt: string;           // unverified-from-spec
-  gadaId?: string;             // unverified-from-spec (search searches GADA IDs per spec)
+  id: string;
+  email: string;
+  displayName: string;
+  photoKey: string | null;
+  eventCount: number;
+  totalRevenue: number; // kobo
 }
 
-// Paginated convener list — customInstance returns { data, meta } at envelope level
 export interface ConvenerListResponse {
   data: Convener[];
   meta: PaginationMeta;
 }
 
-// ─── Vendors ──────────────────────────────────────────────────────────────────
-// Live endpoint returned an empty list; fields typed from spec docstrings.
-// All fields marked // unverified-from-spec — remove comments once live data confirms.
+// ─── Platform users ───────────────────────────────────────────────────────────
+// GET /v1/admin/users
 
-export type VendorStatus = 'ACTIVE' | 'SUSPENDED'; // unverified-from-spec
+export type UserStatus = 'ACTIVE' | 'SUSPENDED';
 
-export interface Vendor {
-  id: string;             // unverified-from-spec
-  storeName: string;      // unverified-from-spec
-  ownerName: string;      // unverified-from-spec
-  email: string;          // unverified-from-spec
-  phoneNumber?: string;   // unverified-from-spec
-  boothAddress?: string;  // unverified-from-spec
-  status: VendorStatus;   // unverified-from-spec
-  createdAt: string;      // unverified-from-spec
+export interface PlatformUser {
+  id: string;
+  email: string;
+  displayName: string;
+  photoKey: string | null;
+  role: string;
+  status: UserStatus;
+  canConvene: boolean;
+  isVendor: boolean;
+  isVolunteer: boolean;
+  createdAt: string;
 }
 
-// Paginated vendor list — customInstance returns { data, meta } at envelope level
+// ─── Vendors ──────────────────────────────────────────────────────────────────
+// GET /v1/admin/vendors. Admin actions: suspend + restore only (no delete).
+
+export type VendorStatus = 'ACTIVE' | 'SUSPENDED';
+
+export interface Vendor {
+  id: string;
+  userId: string;
+  storeName: string;
+  ownerName: string;
+  email: string;
+  phoneNumber: string | null;
+  description: string | null;
+  /// Vendor's own logo — distinct from `gallery`. Nullable until they set one.
+  logoKey: string | null;
+  /// First gallery image only, included by the admin list purely as a display
+  /// fallback when logoKey is null.
+  gallery?: { imageKey: string }[];
+  boothAddress: string | null;
+  boothLat: number | null;
+  boothLng: number | null;
+  status: VendorStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface VendorListResponse {
   data: Vendor[];
   meta: PaginationMeta;
 }
 
-// ─── Admin users ──────────────────────────────────────────────────────────────
-// Live-verified 2026-06-12: GET /v1/admin/admins returns flat array (no meta/pagination).
-// DELETE is permanent (irreversible). PATCH edits only role+status, not name/email.
-// All admin management operations require SUPER_ADMIN role.
+// ─── Tickets ──────────────────────────────────────────────────────────────────
+// GET /v1/admin/tickets — read-only, no mutations exist.
 
-export type AdminUserRole = 'SUPER_ADMIN' | 'ADMIN' | 'MODERATOR';
-export type AdminUserStatus = 'ACTIVE' | 'SUSPENDED';
+export type TicketStatus = 'CONFIRMED' | 'CHECKED_IN' | 'REFUNDED' | 'CANCELLED';
 
-export interface AdminUser {
+export interface TicketPurchase {
   id: string;
-  name: string;
-  email: string;
-  role: AdminUserRole;
-  status: AdminUserStatus;
-  createdAt: string;
-  updatedAt: string;
-}
-
-// ─── Notifications ────────────────────────────────────────────────────────────
-// Live endpoint + POST/PATCH response verified 2026-06-12.
-
-export type NotificationStatus = 'PENDING' | 'SENT';
-
-export interface AdminNotification {
-  id: string;
-  createdByAdminId: string;
-  title: string;
-  description: string;
-  endUsers: string[];       // ["ALL"] = broadcast; otherwise array of user IDs
-  scheduledDate: string;    // ISO 8601 — future = scheduled, past/present = sent immediately
-  status: NotificationStatus;
+  status: TicketStatus;
+  eventName: string;
+  buyerEmail: string;
+  tierName: string;
+  amountKobo: number;
+  amountNaira: number;
   createdAt: string;
 }
 
-export interface NotificationListResponse {
-  data: AdminNotification[];
+export interface TicketListResponse {
+  data: TicketPurchase[];
   meta: PaginationMeta;
 }
 
-// POST /v1/admin/notifications — all fields required
-export interface CreateNotificationDto {
-  title: string;
-  description: string;
-  endUsers: string[];
-  scheduledDate: string;
+// ─── Volunteers ───────────────────────────────────────────────────────────────
+// GET /v1/admin/volunteers — read-only for admin (no suspend endpoint anymore).
+
+export interface VolunteerApplication {
+  id: string;
+  userId: string;
+  eventId: string;
+  roleId: string;
+  motivation: string | null;
+  skills: string[];
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | string;
+  reviewNote: string | null;
+  reviewedAt: string | null;
+  reviewedBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+  user: { id: string; displayName: string; email: string } | null;
+  event: { id: string; name: string } | null;
+  role: { id: string; name: string } | null;
 }
 
-// PATCH /v1/admin/notifications/{id} — all fields optional; only works on PENDING rows
-// Note: generated adminControllerUpdateAdminNotification drops the body param (spec gen bug);
-// pass body via RequestInit options — see NotificationsList.tsx
-export interface UpdateNotificationDto {
-  title?: string;
-  description?: string;
-  endUsers?: string[];
-  scheduledDate?: string;
+// ─── Admin accounts ───────────────────────────────────────────────────────────
+// GET /v1/admin/admins — flat array, NO pagination meta. Verified 2026-08-02.
+// There is no update endpoint: only list, create, delete.
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  name: string;
+  isSuperAdmin: boolean;
+  createdAt: string;
+  lastLoginAt: string | null;
+}
+
+// POST /v1/admin/admins
+export interface CreateAdminBody {
+  email: string;
+  password: string;
+  name: string;
+  isSuperAdmin?: boolean;
+}
+
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+// POST /v1/admin/auth/signin — verified 2026-08-02.
+
+export interface AdminSigninResult {
+  accessToken: string;
+  expiresIn: number;
+  admin: AdminProfile;
+}
+
+export interface AdminProfile {
+  id: string;
+  email: string;
+  name: string;
+  isSuperAdmin: boolean;
+}
+
+// ─── Notifications ────────────────────────────────────────────────────────────
+// The stored-notification CRUD surface was removed. The ONLY remaining operation
+// is a fire-and-forget push broadcast: POST /v1/admin/notifications.
+// There is no list endpoint, so there is no notification history to display.
+
+export interface BroadcastBody {
+  title: string;
+  body: string;
+  userIds?: string[]; // omit / empty = broadcast to all users
 }

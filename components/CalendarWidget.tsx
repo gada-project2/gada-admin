@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useAdminControllerGetCalendarData } from "@/lib/api/generated/admin/admin";
-import type { CalendarData } from "@/lib/api/types/admin";
+import { useAdminControllerCalendar } from "@/lib/api/generated/admin/admin";
+import type { CalendarData, AdminEventStatus } from "@/lib/api/types/admin";
 
 const DAYS   = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTHS = [
@@ -28,6 +28,27 @@ function dateKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+// GET /v1/admin/calendar expects month as "YYYY-MM".
+function monthKey(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+// The time grid only renders 06:00–15:00. Clamp so events starting outside that
+// band still appear (pinned to the first/last visible row) instead of vanishing.
+const FIRST_HOUR = 6;
+const LAST_HOUR = 15;
+function clampHour(h: number): number {
+  return Math.min(LAST_HOUR, Math.max(FIRST_HOUR, h));
+}
+
+// The calendar endpoint returns the event's own lifecycle status. There is no
+// admin approval state anymore, so colour by lifecycle instead.
+function statusColor(status: AdminEventStatus): string {
+  if (status === "PUBLISHED") return "#fbbf24";
+  if (status === "DRAFT") return "#d1d5db";
+  return "#fca5a5"; // CANCELLED / SUSPENDED
+}
+
 export default function CalendarWidget() {
   const today   = new Date();
   const [current, setCurrent] = useState(today);
@@ -35,23 +56,27 @@ export default function CalendarWidget() {
 
   const weekDays = getWeekDays(current);
 
-  const { data: raw } = useAdminControllerGetCalendarData({
-    month: current.getMonth() + 1,
-    year:  current.getFullYear(),
+  // status is a required query param on this endpoint; empty string = no filter.
+  const { data: raw } = useAdminControllerCalendar({
+    month: monthKey(current),
+    status: "",
   });
   const calData = raw as unknown as CalendarData | undefined;
 
-  // Build a date→events map from the API response
-  const eventsByDate: Record<string, { title: string; color: string }[]> = {};
-  calData?.events.forEach((ev) => {
-    const key = ev.startDate?.slice(0, 10);
-    if (!key) return;
-    (eventsByDate[key] ??= []).push({ title: ev.title, color: "#fbbf24" });
-  });
-  calData?.pendingRequests.forEach((ev) => {
-    const key = ev.startDate?.slice(0, 10);
-    if (!key) return;
-    (eventsByDate[key] ??= []).push({ title: ev.title, color: "#d1d5db" });
+  // The API returns a single flat array of events (no separate pendingRequests
+  // bucket — the approval queue no longer exists). Bucket by date AND start hour
+  // so events land in the correct row of the time grid.
+  const eventsByDate: Record<string, { title: string; color: string; hour: number }[]> = {};
+  calData?.forEach((ev) => {
+    if (!ev.startDate) return;
+    const start = new Date(ev.startDate);
+    if (Number.isNaN(start.getTime())) return;
+    const key = dateKey(start);
+    (eventsByDate[key] ??= []).push({
+      title: ev.name,
+      color: statusColor(ev.status),
+      hour: start.getHours(),
+    });
   });
 
   const hours = Array.from({ length: 10 }, (_, i) => i + 6);
@@ -143,7 +168,9 @@ export default function CalendarWidget() {
                   className="border-l border-t relative"
                   style={{ borderColor: "#f3f4f6" }}
                 >
-                  {(hour === 9 ? (eventsByDate[key] ?? []) : []).map((ev, i) => (
+                  {(eventsByDate[key] ?? [])
+                    .filter((ev) => clampHour(ev.hour) === hour)
+                    .map((ev, i) => (
                     <div
                       key={i}
                       className="absolute inset-x-0.5 top-0.5 rounded text-xs px-1 py-0.5 truncate"

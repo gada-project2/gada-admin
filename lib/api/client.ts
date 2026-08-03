@@ -37,10 +37,15 @@ export class ApiError extends Error {
 // Envelope — what the server always sends back
 // ---------------------------------------------------------------------------
 
-interface PaginationMeta {
+// What the API actually sends at the envelope level. Note there is no totalPages.
+interface RawPaginationMeta {
   page: number;
   perPage: number;
   total: number;
+}
+
+interface PaginationMeta extends RawPaginationMeta {
+  // Derived here — the API does not return it.
   totalPages: number;
 }
 
@@ -48,7 +53,9 @@ interface ApiEnvelope<T> {
   success: boolean;
   data: T;
   // Pagination meta lives at the envelope level, not inside data
-  meta?: PaginationMeta;
+  meta?: RawPaginationMeta;
+  // Errors arrive as { success:false, error:{ code, message } } — NOT a top-level message.
+  error?: { code?: string; statusCode?: number; message?: string };
   message?: string;
 }
 
@@ -79,14 +86,22 @@ export const customInstance = async <TResponse>(
   if (!response.ok || !body?.success) {
     throw new ApiError(
       response.status,
-      body?.message ?? response.statusText ?? 'Request failed',
+      body?.error?.message ?? body?.message ?? response.statusText ?? 'Request failed',
     );
   }
 
   // When the server includes top-level pagination meta, surface it alongside data
   // so paginated list hooks can access { data, meta } rather than just the array.
+  // totalPages is derived here because the API does not send it.
   if (body.meta !== undefined) {
-    return { data: body.data, meta: body.meta } as unknown as TResponse;
+    const { page, perPage, total } = body.meta;
+    const meta: PaginationMeta = {
+      page,
+      perPage,
+      total,
+      totalPages: perPage > 0 ? Math.max(1, Math.ceil(total / perPage)) : 1,
+    };
+    return { data: body.data, meta } as unknown as TResponse;
   }
 
   return body.data;

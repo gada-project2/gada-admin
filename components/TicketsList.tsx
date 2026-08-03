@@ -1,68 +1,55 @@
 "use client";
 
 import {
-  adminControllerGetTickets,
-  getAdminControllerGetTicketsQueryKey,
+  adminControllerListTickets,
+  getAdminControllerListTicketsQueryKey,
 } from "@/lib/api/generated/admin/admin";
-import type { AdminControllerGetTicketsParams } from "@/lib/api/generated/model/adminControllerGetTicketsParams";
-import type { TicketPurchase, TicketListResponse } from "@/lib/api/types/admin";
+import type { AdminControllerListTicketsParams } from "@/lib/api/generated/model/adminControllerListTicketsParams";
+import type { TicketPurchase, TicketListResponse, TicketStatus } from "@/lib/api/types/admin";
 import { useTableQuery } from "@/lib/hooks/useTableQuery";
 import DataTable, { type Column } from "@/components/ui/DataTable";
 import { formatNaira } from "@/lib/utils/format";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function formatDate(iso?: string): string {
+function formatDate(iso?: string | null): string {
   if (!iso) return "—";
   try { return new Date(iso).toLocaleDateString("en-GB"); } catch { return iso; }
 }
 
-function CheckInBadge({ checkedIn }: { checkedIn?: boolean }) {
-  if (checkedIn === undefined || checkedIn === null) return <span className="text-gada-text-muted">—</span>;
-  return (
-    <span
-      className={`px-2 py-0.5 rounded text-xs font-medium ${
-        checkedIn ? "bg-green-100 text-green-700" : "bg-gada-surface-card text-gada-text-secondary"
-      }`}
-    >
-      {checkedIn ? "Checked in" : "Not checked in"}
-    </span>
-  );
+const STATUS_STYLE: Record<string, string> = {
+  CONFIRMED:  "bg-green-100 text-green-700",
+  CHECKED_IN: "bg-blue-100 text-blue-700",
+  REFUNDED:   "bg-amber-100 text-amber-700",
+  CANCELLED:  "bg-red-100 text-red-600",
+};
+
+function StatusBadge({ status }: { status: TicketStatus }) {
+  const cls = STATUS_STYLE[status] ?? "bg-gada-surface-card text-gada-text-secondary";
+  const label = status.charAt(0) + status.slice(1).toLowerCase().replace(/_/g, " ");
+  return <span className={`px-2 py-0.5 rounded text-xs font-medium ${cls}`}>{label}</span>;
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-// READ-ONLY: No ticket mutations exist in the admin spec.
+// READ-ONLY: no ticket mutations exist on the admin API.
+//
+// GET /v1/admin/tickets accepts page + perPage ONLY. The previous search box and
+// From/To date filters called parameters this endpoint does not have, so they
+// were removed rather than left as controls that silently do nothing.
 
 export default function TicketsList() {
-  // ── Table query ───────────────────────────────────────────────────────────────
-  // Confirmed params: search ✅, startDate/endDate ✅; status → 500 (not exposed).
-  const {
-    rows,
-    meta,
-    isLoading,
-    isError,
-    refetch,
-    search,
-    setSearch,
-    page,
-    setPage,
-    params,
-    setParam,
-  } = useTableQuery<TicketPurchase, AdminControllerGetTicketsParams>({
-    fetchFn: adminControllerGetTickets,
-    queryKey: getAdminControllerGetTicketsQueryKey,
-    mapParams: ({ page, perPage, search, extras }) => ({
-      page,
-      perPage,
-      ...(search ? { search } : {}),
-      ...(extras.startDate ? { startDate: extras.startDate } : {}),
-      ...(extras.endDate ? { endDate: extras.endDate } : {}),
-    }),
-    extractRows: (data) => (data as TicketListResponse | undefined)?.data ?? [],
-    extractMeta: (data) => (data as TicketListResponse | undefined)?.meta,
-    perPage: 10,
-    extraParamKeys: ["startDate", "endDate"],
-  });
+  const { rows, meta, isLoading, isError, refetch, page, setPage } =
+    useTableQuery<TicketPurchase, AdminControllerListTicketsParams>({
+      fetchFn: adminControllerListTickets,
+      queryKey: getAdminControllerListTicketsQueryKey,
+      mapParams: ({ page, perPage }) => ({
+        page: String(page),
+        perPage: String(perPage),
+      }),
+      extractRows: (data) => (data as TicketListResponse | undefined)?.data ?? [],
+      extractMeta: (data) => (data as TicketListResponse | undefined)?.meta,
+      perPage: 10,
+    });
 
   // ── Column definitions ─────────────────────────────────────────────────────
   const perPage = meta?.perPage ?? 10;
@@ -73,40 +60,18 @@ export default function TicketsList() {
       header: "S/N",
       render: (_, i) => `${(page - 1) * perPage + i + 1}.`,
     },
+    { key: "eventName", header: "Event" },
+    { key: "buyerEmail", header: "Buyer" },
+    { key: "tierName", header: "Ticket Tier" },
     {
-      key: "buyerName",
-      header: "Ticket Holder",
-      render: (row) => row.buyerName ?? "—",
-    },
-    {
-      key: "buyerEmail",
-      header: "Email",
-      render: (row) => row.buyerEmail ?? "—",
-    },
-    {
-      key: "eventTitle",
-      header: "Event",
-      render: (row) => row.eventTitle ?? "—",
-    },
-    {
-      key: "ticketName",
-      header: "Ticket Tier",
-      render: (row) => row.ticketName ?? row.ticketType ?? "—",
-    },
-    {
-      key: "price",
+      key: "amountKobo",
       header: "Amount",
-      render: (row) => formatNaira(row.price),
+      render: (row) => formatNaira(row.amountKobo),
     },
     {
-      key: "paymentProvider",
-      header: "Provider",
-      render: (row) => row.paymentProvider ?? "—",
-    },
-    {
-      key: "checkedIn",
-      header: "Check-in",
-      render: (row) => <CheckInBadge checkedIn={row.checkedIn} />,
+      key: "status",
+      header: "Status",
+      render: (row) => <StatusBadge status={row.status} />,
     },
     {
       key: "createdAt",
@@ -114,48 +79,6 @@ export default function TicketsList() {
       render: (row) => formatDate(row.createdAt),
     },
   ];
-
-  // ── Filter controls (search + date range) ────────────────────────────────────
-  const filters = (
-    <>
-      <div className="flex flex-col gap-1">
-        <label className="text-xs text-gada-text-muted font-medium">From:</label>
-        <input
-          type="date"
-          value={params.startDate ?? ""}
-          onChange={(e) => setParam("startDate", e.target.value)}
-          className="border border-gada-border-light rounded-lg px-3 py-2 text-xs text-gada-text-secondary outline-none"
-        />
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <label className="text-xs text-gada-text-muted font-medium">To:</label>
-        <input
-          type="date"
-          value={params.endDate ?? ""}
-          onChange={(e) => setParam("endDate", e.target.value)}
-          className="border border-gada-border-light rounded-lg px-3 py-2 text-xs text-gada-text-secondary outline-none"
-        />
-      </div>
-
-      <div className="flex flex-col gap-1 flex-1">
-        <label className="text-xs text-gada-text-muted font-medium">Search:</label>
-        <div className="flex items-center border border-gada-border-light rounded-lg px-3 py-2 gap-2">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2">
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.35-4.35" />
-          </svg>
-          <input
-            type="text"
-            placeholder="Search by holder name or event"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 text-xs text-gada-text-secondary outline-none bg-transparent"
-          />
-        </div>
-      </div>
-    </>
-  );
 
   return (
     <div className="flex flex-col gap-5">
@@ -174,8 +97,7 @@ export default function TicketsList() {
           isError={isError}
           onRetry={refetch}
           emptyLabel="No tickets found"
-          emptyNote="Try adjusting your search or date range."
-          filters={filters}
+          emptyNote="No ticket purchases have been recorded yet."
           meta={meta}
           page={page}
           onPageChange={setPage}

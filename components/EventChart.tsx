@@ -1,27 +1,51 @@
 "use client";
 
-import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
-import { ChevronDown } from "lucide-react";
-import { useAdminControllerGetEventChartData } from "@/lib/api/generated/admin/admin";
+import { useState } from "react";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+import { useAdminControllerChartEvents } from "@/lib/api/generated/admin/admin";
 import type { EventChartData } from "@/lib/api/types/admin";
 import Spinner from "@/components/ui/Spinner";
 import ErrorState from "@/components/ui/ErrorState";
 
-const COLORS = ["#1a1a1a", "#d1d5db", "#6b7280"];
+// GET /v1/admin/dashboard/chart/events returns a daily time series
+// ({ date, count }[]), NOT the active/past/upcoming aggregate the old dev API
+// returned — so this is a trend chart, not a pie chart.
+
+const RANGES = [
+  { label: "Last 7 days", value: "7" },
+  { label: "Last 30 days", value: "30" },
+  { label: "Last 90 days", value: "90" },
+];
+
+function shortDate(iso: string): string {
+  // "2026-07-14" → "14 Jul"
+  const d = new Date(`${iso}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return iso;
+  return `${d.getUTCDate()} ${d.toLocaleString("en", { month: "short", timeZone: "UTC" })}`;
+}
 
 export default function EventChart() {
+  const [days, setDays] = useState("30");
+
   const { data: raw, isLoading, isError, refetch } =
-    useAdminControllerGetEventChartData();
+    useAdminControllerChartEvents({ days });
 
-  const chart = raw as unknown as EventChartData | undefined;
+  const points = raw as unknown as EventChartData | undefined;
 
-  const pieData = chart
-    ? [
-        { name: "Active Events",   value: chart.active,   color: COLORS[0] },
-        { name: "Past Events",     value: chart.past,     color: COLORS[1] },
-        { name: "Upcoming Events", value: chart.upcoming, color: COLORS[2] },
-      ]
-    : [];
+  const chartData = points?.map((p) => ({
+    date: shortDate(p.date),
+    events: p.count,
+  }));
+
+  const total = points?.reduce((sum, p) => sum + p.count, 0) ?? 0;
 
   return (
     <div
@@ -29,17 +53,20 @@ export default function EventChart() {
       style={{ backgroundColor: "#ffffff" }}
     >
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h2 className="text-base font-bold text-gray-800">Event Chart</h2>
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs text-gray-500 font-medium">Filter By:</span>
-          <div
-            className="flex items-center gap-1.5 border rounded-lg px-3 py-1.5 text-xs text-gray-600 cursor-pointer"
-            style={{ borderColor: "#e5e7eb", minWidth: 120 }}
-          >
-            <span>Free Events</span>
-            <ChevronDown size={12} />
-          </div>
-        </div>
+        <h2 className="text-base font-bold text-gray-800">Events Created</h2>
+        <select
+          value={days}
+          onChange={(e) => setDays(e.target.value)}
+          className="border rounded-lg px-3 py-1.5 text-xs text-gray-600 bg-white"
+          style={{ borderColor: "#e5e7eb" }}
+          aria-label="Chart date range"
+        >
+          {RANGES.map((r) => (
+            <option key={r.value} value={r.value}>
+              {r.label}
+            </option>
+          ))}
+        </select>
       </div>
 
       {isLoading && (
@@ -52,45 +79,45 @@ export default function EventChart() {
         <ErrorState message="Failed to load event chart." onRetry={refetch} />
       )}
 
-      {!isLoading && !isError && chart && (
-        <div className="flex items-center gap-6">
-          <div style={{ width: 200, height: 200 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={0}
-                  outerRadius={90}
-                  dataKey="value"
-                  stroke="none"
-                >
-                  {pieData.map((entry, index) => (
-                    <Cell key={index} fill={entry.color} />
-                  ))}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+      {!isLoading && !isError && chartData && (
+        <>
+          <ResponsiveContainer width="100%" height={200}>
+            <AreaChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+              <XAxis
+                dataKey="date"
+                tick={{ fontSize: 11, fill: "#9ca3af" }}
+                axisLine={false}
+                tickLine={false}
+                minTickGap={24}
+              />
+              <YAxis
+                allowDecimals={false}
+                tick={{ fontSize: 11, fill: "#9ca3af" }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <Tooltip
+                contentStyle={{ borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12 }}
+              />
+              <Area
+                type="monotone"
+                dataKey="events"
+                name="Events"
+                stroke="#1a1a1a"
+                fill="#1a1a1a"
+                fillOpacity={0.08}
+                strokeWidth={2}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
 
-          <div className="flex flex-col gap-3">
-            {pieData.map((item) => (
-              <div key={item.name} className="flex items-center gap-2">
-                <div
-                  className="w-4 h-4 rounded-sm shrink-0"
-                  style={{ backgroundColor: item.color }}
-                />
-                <span className="text-sm text-gray-600">{item.name}</span>
-              </div>
-            ))}
-            <div className="mt-2 pt-2" style={{ borderTop: "1px solid #f3f4f6" }}>
-              <p className="text-sm font-semibold text-gray-700">
-                Total Events – {chart.total.toLocaleString()}
-              </p>
-            </div>
+          <div className="pt-2" style={{ borderTop: "1px solid #f3f4f6" }}>
+            <p className="text-sm font-semibold text-gray-700">
+              {total.toLocaleString()} event{total === 1 ? "" : "s"} created in this period
+            </p>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { setAuthCookie } from '@/lib/auth/cookies';
 
 const schema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   password: z.string().min(1),
 });
 
@@ -44,20 +44,50 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Verified against production 2026-08-02: POST /v1/admin/auth/signin returns
+  //   { success, data: { accessToken, expiresIn, admin: { id, email, name, isSuperAdmin } } }
+  // The JWT field is `accessToken` (NOT `token`), and the admin object carries
+  // `isSuperAdmin: boolean` — there is no `role` string.
+  // Errors arrive as { success:false, error:{ code, message } }.
   const data = await upstream.json() as {
     success: boolean;
+    error?: { code?: string; message?: string };
     message?: string;
-    data?: { accessToken: string; admin: { id: string; name: string; email: string; role: string } };
+    data?: {
+      accessToken?: string;
+      expiresIn?: number;
+      admin?: { id: string; name: string; email: string; isSuperAdmin: boolean };
+    };
   };
 
   if (!upstream.ok || !data.success || !data.data) {
     return NextResponse.json(
-      { success: false, message: data.message ?? 'Invalid credentials' },
-      { status: upstream.status },
+      {
+        success: false,
+        message: data.error?.message ?? data.message ?? 'Invalid credentials',
+      },
+      { status: upstream.status || 401 },
     );
   }
 
-  await setAuthCookie(data.data.accessToken);
+  const token = data.data.accessToken;
+
+  // Defensive guard: a 2xx success envelope with no token means the upstream
+  // contract changed (e.g. field renamed). Never set the cookie to undefined
+  // and never report a logged-in state without a real token.
+  if (typeof token !== 'string' || token.length === 0) {
+    console.error(
+      '[admin-login] signin succeeded but no token in response. ' +
+        'Expected data.accessToken (string). Received data keys: ' +
+        JSON.stringify(Object.keys(data.data)),
+    );
+    return NextResponse.json(
+      { success: false, message: 'Login failed: malformed authentication response' },
+      { status: 502 },
+    );
+  }
+
+  await setAuthCookie(token);
 
   return NextResponse.json({ success: true, admin: data.data.admin });
 }

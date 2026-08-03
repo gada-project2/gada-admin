@@ -3,8 +3,16 @@ import { defineConfig } from 'orval';
 export default defineConfig({
   gadaApi: {
     input: {
-      // Live spec — same endpoint confirmed reachable in Step 1
-      target: 'https://api.dev.gadaapp.com/v1/docs-json',
+      // Live production spec (requires ENABLE_DOCS=true on the server)
+      target: 'https://api.gadaapp.com/v1/docs-json',
+      // This admin app only consumes the admin surface. Filtering also avoids two
+      // malformed storage operations in the upstream spec
+      // (StorageController_presignDownload, StorageController_deleteKey) which declare
+      // a {path} URL segment but no matching path parameter — orval hard-fails on them.
+      // Remove the filter once the backend fixes those two operations.
+      filters: {
+        tags: ['admin', 'admin-auth'],
+      },
     },
     output: {
       mode: 'tags-split',          // one file per OpenAPI tag (Admin, Auth, etc.)

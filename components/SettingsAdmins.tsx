@@ -6,21 +6,25 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  adminControllerGetAdmins,
-  getAdminControllerGetAdminsQueryKey,
+  adminControllerListAdmins,
+  getAdminControllerListAdminsQueryKey,
   adminControllerCreateAdmin,
-  adminControllerUpdateAdmin,
-  adminControllerRemoveAdmin,
-  adminControllerChangePassword,
+  adminControllerDeleteAdmin,
 } from "@/lib/api/generated/admin/admin";
-import type { AdminUser, AdminUserRole, AdminUserStatus } from "@/lib/api/types/admin";
+import { adminAuthControllerChangePassword } from "@/lib/api/generated/admin-auth/admin-auth";
+import type { AdminUser } from "@/lib/api/types/admin";
 import { useAdmin } from "@/lib/hooks/useAdmin";
 import DataTable, { type Column } from "@/components/ui/DataTable";
 import Spinner from "@/components/ui/Spinner";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+//
+// The admin account model changed: there is no `role` enum (SUPER_ADMIN /
+// ADMIN / MODERATOR) and no `status` field. An admin is described by a single
+// boolean, `isSuperAdmin`. There is also no update endpoint — admins can be
+// listed, created and deleted only, so the Edit modal was removed.
 
-function formatDate(iso?: string): string {
+function formatDate(iso?: string | null): string {
   if (!iso) return "—";
   try {
     return new Date(iso).toLocaleDateString("en-GB", {
@@ -29,31 +33,15 @@ function formatDate(iso?: string): string {
   } catch { return iso; }
 }
 
-const ROLES: AdminUserRole[] = ["SUPER_ADMIN", "ADMIN", "MODERATOR"];
-const ROLE_LABELS: Record<AdminUserRole, string> = {
-  SUPER_ADMIN: "Super Admin",
-  ADMIN: "Admin",
-  MODERATOR: "Moderator",
-};
-
-function RoleBadge({ role }: { role: AdminUserRole }) {
-  const colours: Record<AdminUserRole, string> = {
-    SUPER_ADMIN: "bg-purple-100 text-purple-700",
-    ADMIN: "bg-blue-100 text-blue-700",
-    MODERATOR: "bg-gray-100 text-gray-600",
-  };
-  return (
-    <span className={`px-2 py-0.5 rounded text-xs font-medium ${colours[role]}`}>
-      {ROLE_LABELS[role]}
+function RoleBadge({ isSuperAdmin }: { isSuperAdmin: boolean }) {
+  return isSuperAdmin ? (
+    <span className="px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700">
+      Super Admin
     </span>
-  );
-}
-
-function StatusBadge({ status }: { status: AdminUserStatus }) {
-  return status === "ACTIVE" ? (
-    <span className="px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">Active</span>
   ) : (
-    <span className="px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700">Suspended</span>
+    <span className="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">
+      Admin
+    </span>
   );
 }
 
@@ -62,10 +50,10 @@ function StatusBadge({ status }: { status: AdminUserStatus }) {
 const createSchema = z
   .object({
     name: z.string().min(1, "Name is required"),
-    email: z.string().email("Valid email required"),
+    email: z.email("Valid email required"),
     password: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z.string().min(1, "Please confirm the password"),
-    role: z.enum(["SUPER_ADMIN", "ADMIN", "MODERATOR"] as const),
+    isSuperAdmin: z.boolean(),
   })
   .refine((d) => d.password === d.confirmPassword, {
     message: "Passwords don't match",
@@ -88,7 +76,7 @@ function CreateAdminModal({ onClose, onSuccess }: CreateAdminModalProps) {
     formState: { errors, isSubmitting },
   } = useForm<CreateFormValues>({
     resolver: zodResolver(createSchema),
-    defaultValues: { role: "ADMIN" },
+    defaultValues: { isSuperAdmin: false },
   });
 
   const mut = useMutation({
@@ -97,7 +85,7 @@ function CreateAdminModal({ onClose, onSuccess }: CreateAdminModalProps) {
         name: values.name,
         email: values.email,
         password: values.password,
-        role: values.role,
+        isSuperAdmin: values.isSuperAdmin,
       }),
     onSuccess: () => { setServerError(null); onSuccess(); },
     onError: (err) => setServerError((err as Error).message ?? "Failed to create admin"),
@@ -158,19 +146,19 @@ function CreateAdminModal({ onClose, onSuccess }: CreateAdminModalProps) {
             {errors.email && <p className="text-xs text-gada-danger">{errors.email.message}</p>}
           </div>
 
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-gada-text-primary">
-              Role <span className="text-gada-danger">*</span>
+          <div className="flex items-start gap-2">
+            <input
+              {...register("isSuperAdmin")}
+              id="isSuperAdmin"
+              type="checkbox"
+              className="mt-0.5"
+            />
+            <label htmlFor="isSuperAdmin" className="text-xs font-medium text-gada-text-primary">
+              Super Admin
+              <span className="block text-gada-text-muted font-normal">
+                Super admins can manage other admin accounts.
+              </span>
             </label>
-            <select
-              {...register("role")}
-              className="border border-gada-border-light rounded-lg px-3 py-2 text-sm text-gada-text-primary outline-none focus:border-gada-dark bg-gada-input-bg-2"
-            >
-              {ROLES.map((r) => (
-                <option key={r} value={r}>{ROLE_LABELS[r]}</option>
-              ))}
-            </select>
-            {errors.role && <p className="text-xs text-gada-danger">{errors.role.message}</p>}
           </div>
 
           <div className="flex flex-col gap-1">
@@ -229,130 +217,10 @@ function CreateAdminModal({ onClose, onSuccess }: CreateAdminModalProps) {
   );
 }
 
-// ─── Edit Admin modal ─────────────────────────────────────────────────────────
-
-const editSchema = z.object({
-  role: z.enum(["SUPER_ADMIN", "ADMIN", "MODERATOR"] as const),
-  status: z.enum(["ACTIVE", "SUSPENDED"] as const),
-});
-
-type EditFormValues = z.infer<typeof editSchema>;
-
-interface EditAdminModalProps {
-  admin: AdminUser;
-  onClose: () => void;
-  onSuccess: () => void;
-}
-
-function EditAdminModal({ admin, onClose, onSuccess }: EditAdminModalProps) {
-  const [serverError, setServerError] = useState<string | null>(null);
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<EditFormValues>({
-    resolver: zodResolver(editSchema),
-    defaultValues: { role: admin.role, status: admin.status },
-  });
-
-  const mut = useMutation({
-    mutationFn: (values: EditFormValues) =>
-      adminControllerUpdateAdmin(admin.id, { role: values.role, status: values.status }),
-    onSuccess: () => { setServerError(null); onSuccess(); },
-    onError: (err) => setServerError((err as Error).message ?? "Failed to update admin"),
-  });
-
-  function onSubmit(values: EditFormValues) {
-    mut.mutate(values);
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-white rounded-xl shadow-lg w-full max-w-sm flex flex-col">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gada-border-light">
-          <h2 className="text-base font-bold text-gada-dark">Edit Admin</h2>
-          <button
-            onClick={onClose}
-            disabled={mut.isPending}
-            className="text-gada-text-muted hover:text-gada-text-primary transition-colors disabled:opacity-50 text-lg leading-none"
-          >
-            ✕
-          </button>
-        </div>
-
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          noValidate
-          className="flex flex-col gap-4 px-6 py-5"
-        >
-          {serverError && (
-            <div className="px-4 py-2 rounded-lg text-sm bg-red-50 text-red-700 border border-red-200">
-              {serverError}
-            </div>
-          )}
-
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-gada-text-muted">Name</label>
-            <p className="text-sm text-gada-text-primary font-medium">{admin.name}</p>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-gada-text-muted">Email</label>
-            <p className="text-sm text-gada-text-secondary">{admin.email}</p>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-gada-text-primary">
-              Role <span className="text-gada-danger">*</span>
-            </label>
-            <select
-              {...register("role")}
-              className="border border-gada-border-light rounded-lg px-3 py-2 text-sm text-gada-text-primary outline-none focus:border-gada-dark bg-gada-input-bg-2"
-            >
-              {ROLES.map((r) => (
-                <option key={r} value={r}>{ROLE_LABELS[r]}</option>
-              ))}
-            </select>
-            {errors.role && <p className="text-xs text-gada-danger">{errors.role.message}</p>}
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-gada-text-primary">
-              Status <span className="text-gada-danger">*</span>
-            </label>
-            <select
-              {...register("status")}
-              className="border border-gada-border-light rounded-lg px-3 py-2 text-sm text-gada-text-primary outline-none focus:border-gada-dark bg-gada-input-bg-2"
-            >
-              <option value="ACTIVE">Active</option>
-              <option value="SUSPENDED">Suspended</option>
-            </select>
-            {errors.status && <p className="text-xs text-gada-danger">{errors.status.message}</p>}
-          </div>
-
-          <div className="flex items-center justify-end gap-3 pt-1">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={mut.isPending}
-              className="px-4 py-2 rounded-lg text-sm font-medium border border-gada-border-light text-gada-text-primary disabled:opacity-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={mut.isPending || isSubmitting}
-              className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-gada-dark disabled:opacity-50"
-            >
-              {mut.isPending ? "Saving…" : "Save changes"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
+// ─── Edit Admin modal — REMOVED ───────────────────────────────────────────────
+// There is no update endpoint on the API (PATCH /v1/admin/admins/{id} does not
+// exist; only GET, POST and DELETE do), and the role/status fields it edited no
+// longer exist on the admin model. Admin accounts are now create-or-delete only.
 
 // ─── Delete confirmation dialog ───────────────────────────────────────────────
 
@@ -366,7 +234,7 @@ function DeleteAdminDialog({ admin, onClose, onSuccess }: DeleteAdminDialogProps
   const [serverError, setServerError] = useState<string | null>(null);
 
   const mut = useMutation({
-    mutationFn: () => adminControllerRemoveAdmin(admin.id),
+    mutationFn: () => adminControllerDeleteAdmin(admin.id),
     onSuccess: () => { setServerError(null); onSuccess(); },
     onError: (err) => setServerError((err as Error).message ?? "Failed to delete admin"),
   });
@@ -439,11 +307,13 @@ function ChangePasswordPanel() {
   });
 
   const mut = useMutation({
+    // ChangePasswordDto is { currentPassword, newPassword } — the endpoint moved
+    // to the admin-auth tag and no longer takes a confirmPassword field, so the
+    // confirmation is validated client-side only.
     mutationFn: (values: PasswordFormValues) =>
-      adminControllerChangePassword({
-        oldPassword: values.oldPassword,
+      adminAuthControllerChangePassword({
+        currentPassword: values.oldPassword,
         newPassword: values.newPassword,
-        confirmPassword: values.confirmPassword,
       }),
     onSuccess: () => {
       setServerError(null);
@@ -547,7 +417,6 @@ function ChangePasswordPanel() {
 
 type ModalState =
   | { type: "create" }
-  | { type: "edit"; admin: AdminUser }
   | { type: "delete"; admin: AdminUser }
   | null;
 
@@ -561,15 +430,15 @@ function AdminManagement({ currentAdminId }: AdminManagementProps) {
   const [successBanner, setSuccessBanner] = useState<string | null>(null);
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: getAdminControllerGetAdminsQueryKey(),
-    queryFn: ({ signal }) => adminControllerGetAdmins({ signal } as RequestInit),
+    queryKey: getAdminControllerListAdminsQueryKey(),
+    queryFn: ({ signal }) => adminControllerListAdmins({ signal } as RequestInit),
   });
 
   const admins = (data as unknown as AdminUser[] | undefined) ?? [];
   const isOnlyAdmin = admins.length <= 1;
 
   function invalidate() {
-    queryClient.invalidateQueries({ queryKey: getAdminControllerGetAdminsQueryKey() });
+    queryClient.invalidateQueries({ queryKey: getAdminControllerListAdminsQueryKey() });
   }
 
   function handleSuccess(msg: string) {
@@ -588,14 +457,14 @@ function AdminManagement({ currentAdminId }: AdminManagementProps) {
     { key: "name", header: "Name" },
     { key: "email", header: "Email" },
     {
-      key: "role",
+      key: "isSuperAdmin",
       header: "Role",
-      render: (row) => <RoleBadge role={row.role} />,
+      render: (row) => <RoleBadge isSuperAdmin={row.isSuperAdmin} />,
     },
     {
-      key: "status",
-      header: "Status",
-      render: (row) => <StatusBadge status={row.status} />,
+      key: "lastLoginAt",
+      header: "Last Login",
+      render: (row) => formatDate(row.lastLoginAt),
     },
     {
       key: "createdAt",
@@ -616,12 +485,6 @@ function AdminManagement({ currentAdminId }: AdminManagementProps) {
     return (
       <div className="flex items-center gap-2">
         <button
-          onClick={() => setModal({ type: "edit", admin: row })}
-          className="px-2 py-0.5 rounded text-xs font-medium border border-gada-border-light text-gada-text-primary hover:bg-gada-surface-card transition-colors"
-        >
-          Edit
-        </button>
-        <button
           onClick={() => canDelete && setModal({ type: "delete", admin: row })}
           disabled={!canDelete}
           title={deleteTitle}
@@ -639,13 +502,6 @@ function AdminManagement({ currentAdminId }: AdminManagementProps) {
         <CreateAdminModal
           onClose={() => setModal(null)}
           onSuccess={() => handleSuccess("Admin created successfully.")}
-        />
-      )}
-      {modal?.type === "edit" && (
-        <EditAdminModal
-          admin={modal.admin}
-          onClose={() => setModal(null)}
-          onSuccess={() => handleSuccess("Admin updated successfully.")}
         />
       )}
       {modal?.type === "delete" && (
@@ -708,11 +564,11 @@ export default function SettingsAdmins() {
     );
   }
 
-  const isSuperAdmin = admin?.role === "SUPER_ADMIN";
+  const isSuperAdmin = admin?.isSuperAdmin === true;
 
   return (
     <div className="flex flex-col gap-5">
-      {/* Admin Management — SUPER_ADMIN only */}
+      {/* Admin Management — super admins only */}
       {isSuperAdmin ? (
         <AdminManagement currentAdminId={admin!.id} />
       ) : (

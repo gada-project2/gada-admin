@@ -7,8 +7,9 @@ import UsersChart from "@/components/UsersChart";
 import TicketChart from "@/components/TicketChart";
 import Spinner from "@/components/ui/Spinner";
 import ErrorState from "@/components/ui/ErrorState";
-import { useAdminControllerGetDashboardStats } from "@/lib/api/generated/admin/admin";
+import { useAdminControllerStats } from "@/lib/api/generated/admin/admin";
 import type { DashboardStats } from "@/lib/api/types/admin";
+import { formatNaira } from "@/lib/utils/format";
 
 // ─── Stat card icon helpers (unchanged SVGs) ──────────────────────────────────
 
@@ -52,25 +53,25 @@ const TicketIcon = (
 );
 
 export default function DashboardPage() {
-  const { data: raw, isLoading, isError, refetch } =
-    useAdminControllerGetDashboardStats();
+  const { data: raw, isLoading, isError, refetch } = useAdminControllerStats();
 
   const stats = raw as unknown as DashboardStats | undefined;
 
   // ─── Stat card definitions ───────────────────────────────────────────────────
-  // Fields with no API backing show "—" and are flagged in the data-gaps report.
+  // Every card below maps to a real field on GET /v1/admin/dashboard/stats.
+  // The old "—" placeholder cards (Paid/Free Events, Total/Available Tickets,
+  // Total Conveners) were removed: this API exposes no such counters.
   const statCards = stats
     ? [
-        { label: "Total Users",      value: stats.users.total,            icon: UsersIcon },
-        { label: "Total Conveners",  value: stats.users.conveners,        icon: ConvenerIcon },
-        { label: "Total Vendors",    value: stats.users.vendors,          icon: VendorIcon },
-        { label: "Total Events",     value: stats.gadarings.total,        icon: CalIcon },
-        { label: "Active Events",    value: stats.gadarings.active,       icon: CheckCalIcon },
-        { label: "Paid Events",      value: "—",                          icon: CalIcon },   // no API field
-        { label: "Free Events",      value: "—",                          icon: CalIcon },   // no API field
-        { label: "Total Tickets",    value: "—",                          icon: TicketIcon },// no API field
-        { label: "Ticket Sold",      value: stats.tickets.totalPurchases, icon: TicketIcon },
-        { label: "Ticket Available", value: "—",                          icon: TicketIcon },// no API field
+        { label: "Total Users",       value: stats.totalUsers,        icon: UsersIcon },
+        { label: "Total Events",      value: stats.totalEvents,       icon: CalIcon },
+        { label: "Published Events",  value: stats.publishedEvents,   icon: CheckCalIcon },
+        { label: "Active Vendors",    value: stats.activeVendors,     icon: VendorIcon },
+        { label: "Revenue",           value: formatNaira(stats.totalRevenue), icon: TicketIcon },
+        { label: "Pending Volunteers", value: stats.pendingVolunteers, icon: ConvenerIcon },
+        { label: "Checked In Today",  value: stats.checkedInToday,    icon: TicketIcon },
+        { label: "New Users Today",   value: stats.newUsersToday,     icon: UsersIcon },
+        { label: "New Events Today",  value: stats.newEventsToday,    icon: CalIcon },
       ]
     : [];
 

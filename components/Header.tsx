@@ -15,7 +15,8 @@ export default function Header() {
   const { admin, isLoading } = useAdmin();
 
   const displayName = isLoading ? "…" : (admin?.name ?? "Admin");
-  const displayRole = isLoading ? "…" : (admin?.role ?? "Admin");
+  // The admin model has no role enum any more — just an isSuperAdmin flag.
+  const displayRole = isLoading ? "…" : admin?.isSuperAdmin ? "Super Admin" : "Admin";
   const avatarText = admin ? initials(admin.name) : "—";
 
   return (

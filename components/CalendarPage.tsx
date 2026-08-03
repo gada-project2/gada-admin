@@ -3,8 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Eye } from "lucide-react";
-import { useAdminControllerGetCalendarData } from "@/lib/api/generated/admin/admin";
-import type { CalendarData, CalendarEventItem } from "@/lib/api/types/admin";
+import { useAdminControllerCalendar } from "@/lib/api/generated/admin/admin";
+import type { CalendarData, CalendarEventItem, AdminEventStatus } from "@/lib/api/types/admin";
 import Spinner from "@/components/ui/Spinner";
 import ErrorState from "@/components/ui/ErrorState";
 import EmptyState from "@/components/ui/EmptyState";
@@ -12,7 +12,10 @@ import EmptyState from "@/components/ui/EmptyState";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type View = "Day" | "Week" | "Month";
-type RequestTab = "All Event" | "Approved" | "Declined";
+// The admin approval workflow (Approved/Declined) was removed from the API.
+// These tabs now filter on the event's own lifecycle status, which is what the
+// calendar endpoint actually returns.
+type RequestTab = "All Event" | "Published" | "Draft" | "Cancelled";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -57,7 +60,26 @@ function isoDateKey(iso: string) {
   return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 }
 
-function formatEventDate(iso?: string): string {
+// Lifecycle-status badge styling. Replaces the old APPROVED/DECLINED/PENDING
+// badge — the admin approval workflow no longer exists on this API.
+function statusBadgeStyle(status: AdminEventStatus): { backgroundColor: string; color: string } {
+  switch (status) {
+    case "PUBLISHED":
+      return { backgroundColor: "#dcfce7", color: "#16a34a" };
+    case "CANCELLED":
+    case "SUSPENDED":
+      return { backgroundColor: "#fee2e2", color: "#dc2626" };
+    case "DRAFT":
+    default:
+      return { backgroundColor: "#fef9c3", color: "#ca8a04" };
+  }
+}
+
+function statusLabel(status: string): string {
+  return status.charAt(0) + status.slice(1).toLowerCase();
+}
+
+function formatEventDate(iso?: string | null): string {
   if (!iso) return "—";
   try {
     return new Date(iso).toLocaleDateString("en-US", {
@@ -66,12 +88,12 @@ function formatEventDate(iso?: string): string {
   } catch { return iso; }
 }
 
-function startHourOf(iso?: string): number {
+function startHourOf(iso?: string | null): number {
   if (!iso) return START_HOUR;
   try { return new Date(iso).getHours(); } catch { return START_HOUR; }
 }
 
-function endHourOf(startIso?: string, endIso?: string): number {
+function endHourOf(startIso?: string | null, endIso?: string | null): number {
   if (endIso) {
     try { return new Date(endIso).getHours() + new Date(endIso).getMinutes() / 60; } catch {}
   }
@@ -101,12 +123,12 @@ function ViewToggle({ view, setView }: { view: View; setView: (v: View) => void 
 }
 
 function UpcomingEventCard({ ev }: { ev: CalendarEventItem }) {
-  const isActive = ev.adminStatus === "APPROVED";
+  const isActive = ev.status === "PUBLISHED";
   return (
     <div className="flex rounded-xl overflow-hidden bg-white shadow-sm">
       <div className={`w-1.5 shrink-0 rounded-l-xl ${isActive ? "bg-gada-accent" : "bg-gada-avatar"}`} />
       <div className="flex-1 px-4 py-3 flex flex-col gap-1">
-        <p className="text-sm font-bold text-gray-800">{ev.title}</p>
+        <p className="text-sm font-bold text-gray-800">{ev.name}</p>
         <p className="text-xs font-medium text-gray-600">
           {formatEventDate(ev.startDate)}
         </p>
@@ -138,22 +160,27 @@ export default function CalendarPage() {
   const weekDays = getWeekDays(anchor);
 
   // Fetch calendar data for the current month/year; re-fetches automatically when anchor changes month
-  const { data: raw, isLoading, isError, refetch } = useAdminControllerGetCalendarData({
-    month: anchor.getMonth() + 1,
-    year:  anchor.getFullYear(),
+  // month is "YYYY-MM"; status is a required param — empty string means no filter.
+  const { data: raw, isLoading, isError, refetch } = useAdminControllerCalendar({
+    month: `${anchor.getFullYear()}-${String(anchor.getMonth() + 1).padStart(2, "0")}`,
+    status: "",
   });
 
   const calData = raw as unknown as CalendarData | undefined;
 
-  // Build date→event list for grid rendering
+  // The endpoint returns one flat array — there is no separate pendingRequests
+  // bucket, because the admin approval queue was removed from the API.
+  const events: CalendarEventItem[] = calData ?? [];
+
+  // Build date→event list for grid rendering, coloured by lifecycle status.
   const eventsByDayKey: Record<string, Array<{ ev: CalendarEventItem; color: string; textColor: string }>> = {};
-  calData?.events.forEach((ev) => {
+  events.forEach((ev) => {
     const key = isoDateKey(ev.startDate);
-    (eventsByDayKey[key] ??= []).push({ ev, color: "#e5e7eb", textColor: "#374151" });
-  });
-  calData?.pendingRequests.forEach((ev) => {
-    const key = isoDateKey(ev.startDate);
-    (eventsByDayKey[key] ??= []).push({ ev, color: "#fde68a", textColor: "#92400e" });
+    const palette =
+      ev.status === "PUBLISHED"
+        ? { color: "#fde68a", textColor: "#92400e" }
+        : { color: "#e5e7eb", textColor: "#374151" };
+    (eventsByDayKey[key] ??= []).push({ ev, ...palette });
   });
 
   // ── Navigation ─────────────────────────────────────────────────────────────
@@ -187,12 +214,12 @@ export default function CalendarPage() {
     return `${MONTHS[anchor.getMonth()]} ${anchor.getFullYear()}`;
   }
 
-  const allUpcoming = calData?.events ?? [];
-  const allRequests = calData?.pendingRequests ?? [];
+  const allUpcoming = events;
 
-  const filteredRequests = allRequests.filter((e) => {
-    if (tab === "Approved") return e.adminStatus === "APPROVED";
-    if (tab === "Declined") return e.adminStatus === "DECLINED";
+  const filteredRequests = events.filter((e) => {
+    if (tab === "Published") return e.status === "PUBLISHED";
+    if (tab === "Draft") return e.status === "DRAFT";
+    if (tab === "Cancelled") return e.status === "CANCELLED" || e.status === "SUSPENDED";
     return true;
   });
 
@@ -243,7 +270,7 @@ export default function CalendarPage() {
                         className="rounded px-1 text-xs truncate leading-tight"
                         style={{ backgroundColor: color, color: textColor }}
                       >
-                        {ev.title}
+                        {ev.name}
                       </div>
                     ))}
                     {dayEvents.length > 2 && (
@@ -330,7 +357,7 @@ export default function CalendarPage() {
                     zIndex: 10,
                   }}
                 >
-                  {ev.title}
+                  {ev.name}
                 </div>
               );
             });
@@ -360,27 +387,18 @@ export default function CalendarPage() {
               style={{ backgroundColor: color }}
             />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gada-text-primary">{ev.title}</p>
+              <p className="text-sm font-semibold text-gada-text-primary">{ev.name}</p>
               <p className="text-xs text-gada-text-muted mt-0.5">
                 {formatEventDate(ev.startDate)}
                 {ev.endDate ? ` – ${formatEventDate(ev.endDate)}` : ""}
               </p>
-              {ev.status && (
-                <p className="text-xs text-gada-text-secondary mt-0.5">{ev.status}</p>
-              )}
             </div>
-            {ev.adminStatus && (
+            {ev.status && (
               <span
                 className="px-2.5 py-0.5 rounded-full text-xs font-semibold shrink-0"
-                style={
-                  ev.adminStatus === "APPROVED"
-                    ? { backgroundColor: "#dcfce7", color: "#16a34a" }
-                    : ev.adminStatus === "DECLINED"
-                    ? { backgroundColor: "#fee2e2", color: "#dc2626" }
-                    : { backgroundColor: "#fef9c3", color: "#ca8a04" }
-                }
+                style={statusBadgeStyle(ev.status)}
               >
-                {ev.adminStatus.charAt(0) + ev.adminStatus.slice(1).toLowerCase()}
+                {statusLabel(ev.status)}
               </span>
             )}
           </div>
@@ -467,12 +485,14 @@ export default function CalendarPage() {
       <div className="rounded-2xl p-5 flex flex-col gap-4 bg-gada-surface-card">
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div>
-            <h2 className="text-base font-bold text-gray-800">Events Request</h2>
-            <p className="text-xs text-gada-text-muted mt-0.5">Lists of all request for event.</p>
+            <h2 className="text-base font-bold text-gray-800">Events This Month</h2>
+            <p className="text-xs text-gada-text-muted mt-0.5">
+              All events in the selected month, filterable by status.
+            </p>
           </div>
 
           <div className="flex items-center rounded-full px-1.5 py-1.5 gap-1 bg-white">
-            {(["All Event", "Approved", "Declined"] as RequestTab[]).map((t) => {
+            {(["All Event", "Published", "Draft", "Cancelled"] as RequestTab[]).map((t) => {
               const active = tab === t;
               return (
                 <button
@@ -481,7 +501,7 @@ export default function CalendarPage() {
                   className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-semibold transition-colors ${
                     active
                       ? "bg-gada-dark text-white"
-                      : t === "Declined"
+                      : t === "Cancelled"
                         ? "bg-transparent text-gada-danger"
                         : "bg-transparent text-gada-text-secondary"
                   }`}
@@ -491,12 +511,12 @@ export default function CalendarPage() {
                       <rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" />
                     </svg>
                   )}
-                  {t === "Approved" && (
+                  {t === "Published" && (
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <path d="M20 6 9 17l-5-5" />
                     </svg>
                   )}
-                  {t === "Declined" && (
+                  {t === "Cancelled" && (
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <path d="M18 6 6 18M6 6l12 12" />
                     </svg>
@@ -537,7 +557,7 @@ export default function CalendarPage() {
 
                   <div className="flex-1 py-3 pr-4 min-w-0">
                     <div className="flex items-start justify-between gap-3">
-                      <p className="text-sm font-bold text-gray-800 truncate">{ev.title}</p>
+                      <p className="text-sm font-bold text-gray-800 truncate">{ev.name}</p>
                       <p className="text-xs font-medium text-gada-text-secondary whitespace-nowrap shrink-0">
                         Date: {formatEventDate(ev.startDate)}
                       </p>
@@ -550,17 +570,9 @@ export default function CalendarPage() {
                   <div className="pr-4 shrink-0">
                     <span
                       className="px-3 py-1 rounded-full text-xs font-semibold"
-                      style={
-                        ev.adminStatus === "APPROVED"
-                          ? { backgroundColor: "#dcfce7", color: "#16a34a" }
-                          : ev.adminStatus === "DECLINED"
-                          ? { backgroundColor: "#fee2e2", color: "#dc2626" }
-                          : { backgroundColor: "#fef9c3", color: "#ca8a04" }
-                      }
+                      style={statusBadgeStyle(ev.status)}
                     >
-                      {ev.adminStatus
-                        ? ev.adminStatus.charAt(0) + ev.adminStatus.slice(1).toLowerCase()
-                        : "Pending"}
+                      {statusLabel(ev.status)}
                     </span>
                   </div>
                 </div>

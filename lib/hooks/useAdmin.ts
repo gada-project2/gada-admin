@@ -2,28 +2,42 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAdminControllerGetMe } from '@/lib/api/generated/admin/admin';
-import { ApiError } from '@/lib/api/client';
+import { useQuery } from '@tanstack/react-query';
+import type { AdminProfile } from '@/lib/api/types/admin';
 
-export interface AdminProfile {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-}
+export type { AdminProfile };
 
+/**
+ * Current signed-in admin.
+ *
+ * The API's GET /v1/admin/auth/me endpoint was removed, so this reads from the
+ * app's own BFF route (/api/auth/me), which recovers the identity from the
+ * session JWT and enriches it from the admins list. See app/api/auth/me/route.ts.
+ */
 export function useAdmin() {
   const router = useRouter();
-  const { data, error, isLoading } = useAdminControllerGetMe();
+
+  const { data, error, isLoading } = useQuery<AdminProfile>({
+    queryKey: ['auth', 'me'],
+    queryFn: async () => {
+      const res = await fetch('/api/auth/me');
+      if (res.status === 401) {
+        throw new Error('unauthenticated');
+      }
+      if (!res.ok) {
+        throw new Error('Failed to load admin profile');
+      }
+      const body = await res.json() as { success: boolean; data: AdminProfile };
+      return body.data;
+    },
+    retry: false,
+  });
 
   useEffect(() => {
-    if (error && (error as unknown as ApiError).status === 401) {
+    if (error?.message === 'unauthenticated') {
       router.push('/');
     }
   }, [error, router]);
 
-  // customInstance unwraps {success,data} so runtime value is the admin object
-  const admin = data as unknown as AdminProfile | undefined;
-
-  return { admin, isLoading, error };
+  return { admin: data, isLoading, error };
 }
