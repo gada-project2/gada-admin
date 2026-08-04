@@ -533,3 +533,117 @@ export interface SettlementTransaction {
 export interface SettlementDetail extends Settlement {
   transactions: SettlementTransaction[];
 }
+
+// ─── Disputes ──────────────────────────────────────────────────────────────────
+// GET /v1/admin/disputes (list, filters: status/type/dateFrom/dateTo),
+// GET /v1/admin/disputes/{id} (detail + full thread + filer + inline anchor
+// summaries), POST .../messages, PATCH .../status, POST .../resolve. Verified
+// against source (AdminService.listDisputes / getDispute / addDisputeMessage /
+// changeDisputeStatus / resolveDispute) 2026-08-04.
+
+export type DisputeType = 'PURCHASE' | 'PAYOUT' | 'VENDOR_BOOTH' | 'GENERAL';
+export type DisputeStatus = 'OPEN' | 'UNDER_REVIEW' | 'RESOLVED' | 'REJECTED';
+
+export interface DisputeFiler {
+  id: string;
+  displayName: string | null;
+  email: string;
+}
+
+export interface DisputeThreadMessage {
+  id: string;
+  disputeId: string;
+  senderId: string;
+  senderType: 'USER' | 'ADMIN' | string;
+  body: string;
+  createdAt: string;
+}
+
+// POST /v1/admin/disputes/{id}/messages response — the created message plus
+// whether posting it auto-transitioned an OPEN dispute to UNDER_REVIEW. That
+// is the ONLY transition this endpoint ever makes, and only from OPEN — never
+// overriding UNDER_REVIEW or a terminal state.
+export interface AddDisputeMessageResult extends DisputeThreadMessage {
+  autoTransitioned: boolean;
+}
+
+export interface DisputeListRow {
+  id: string;
+  filedByUserId: string;
+  filedBy: DisputeFiler | null;
+  type: DisputeType;
+  status: DisputeStatus;
+  purchaseId: string | null;
+  eventPayoutId: string | null;
+  vendorBoothId: string | null;
+  eventId: string | null;
+  subject: string;
+  description: string;
+  resolvedByAdminId: string | null;
+  resolution: string | null;
+  resolutionAction: string | null;
+  refundPurchaseId: string | null;
+  createdAt: string;
+  updatedAt: string;
+  resolvedAt: string | null;
+  lastMessage: DisputeThreadMessage | null;
+}
+
+export interface DisputeListResponse {
+  data: DisputeListRow[];
+  meta: PaginationMeta;
+}
+
+export interface DisputePurchaseAnchor {
+  id: string;
+  totalKobo: number;
+  quantity: number;
+  status: string;
+  event: { id: string; name: string } | null;
+}
+
+// `id` here is the SAME id the Settlement detail route uses — Settlement.id
+// IS EventPayout.id (AdminService.getSettlement keys off it directly) — so
+// this anchor can link straight to /dashboard/settlements/{id}.
+export interface DisputeEventPayoutAnchor {
+  id: string;
+  amountKobo: number;
+  status: string;
+}
+
+// No vendorId/vendorProfileId is included in this anchor (getDispute's
+// `vendorBooth` select omits it) — there is not enough here to link to the
+// Vendor Detail page, only the booth's event.
+export interface DisputeVendorBoothAnchor {
+  id: string;
+  boothNo: string | null;
+  event: { id: string; name: string } | null;
+}
+
+// GET /v1/admin/disputes/{id} — same scalar fields as the list row (minus
+// lastMessage) plus the full thread and inline anchor-entity summaries.
+export interface DisputeDetail extends Omit<DisputeListRow, 'lastMessage'> {
+  messages: DisputeThreadMessage[];
+  purchase: DisputePurchaseAnchor | null;
+  eventPayout: DisputeEventPayoutAnchor | null;
+  vendorBooth: DisputeVendorBoothAnchor | null;
+  event: { id: string; name: string } | null;
+}
+
+// GET /v1/admin/purchases/{id} — used only by the Dispute resolve flow, to
+// prefill the refund amount with the real remaining balance. No frontend
+// screen consumes this endpoint anywhere else (grepped the whole app before
+// adding this — there is no existing refund UI to reuse; see report).
+export interface AdminPurchaseRefundState {
+  amountKobo: number;
+  refundedKobo: number;
+  remainingKobo: number;
+  isFullyRefunded: boolean;
+  isPartiallyRefunded: boolean;
+  refundable: boolean;
+}
+
+export interface AdminPurchaseDetail {
+  id: string;
+  refund: AdminPurchaseRefundState;
+}

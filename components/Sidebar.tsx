@@ -15,6 +15,7 @@ import {
   LogOut,
   Wallet,
   Landmark,
+  Gavel,
   ShieldAlert,
   ScrollText,
 } from "lucide-react";
@@ -32,6 +33,9 @@ const navItems = [
   // security-log territory that requires super-admin restriction (see Action
   // Log below) — visible to every admin.
   { label: "Settlements", href: "/dashboard/settlements", icon: Landmark },
+  // Same discipline as Settlements: dispute handling is operational admin
+  // work, not the sensitive/security territory Action Log is gated for.
+  { label: "Disputes", href: "/dashboard/disputes", icon: Gavel },
   { label: "SOS Events", href: "/dashboard/sos", icon: ShieldAlert },
   { label: "Notifications", href: "/dashboard/notifications", icon: Bell },
   { label: "Calendar", href: "/dashboard/calendar", icon: Calendar },

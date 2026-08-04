@@ -8,10 +8,22 @@
       "Bash(npx eslint *)",
       "Bash(cd /Users/mac/Desktop/geealee/gada/gada-api && grep -n \"enum VendorStatus\" -A 6 prisma/schema.prisma; echo \"---routes---\"; sed -n '172,198p' src/admin/admin.controller.ts)",
       "Bash(mkdir -p \"/Users/mac/Desktop/geealee/gada/gada-admin/app/dashboard/vendors/[id]\")",
-      "Bash(cd /Users/mac/Desktop/geealee/gada/gada-api && grep -n \"async listEvents\" -A 20 src/admin/admin.service.ts; echo \"---controller---\"; grep -n \"listEvents\" -A 12 src/admin/admin.controller.ts | head -20)"
+      "Bash(cd /Users/mac/Desktop/geealee/gada/gada-api && grep -n \"async listEvents\" -A 20 src/admin/admin.service.ts; echo \"---controller---\"; grep -n \"listEvents\" -A 12 src/admin/admin.controller.ts | head -20)",
+      "Bash(cd /Users/mac/Desktop/geealee/gada/gada-api && sed -n '320,385p' src/admin/admin.controller.ts)",
+      "Bash(cd /Users/mac/Desktop/geealee/gada/gada-api && grep -n \"listDisputes\\\\|getDispute\\\\|addDisputeMessage\\\\|changeDisputeStatus\\\\|resolveDispute\\\\|mapAdminDispute\\\\|USE_RESOLVE_ENDPOINT\" src/admin/admin.service.ts | head -40)",
+      "Read(//Users/mac/Desktop/geealee/gada/gada-api/src/admin/**)",
+      "Bash(cd /Users/mac/Desktop/geealee/gada/gada-api && grep -n \"model Dispute\\\\|model DisputeMessage\\\\|enum DisputeStatus\\\\|enum DisputeType\\\\|enum DisputeSenderType\" -A 25 prisma/schema.prisma)",
+      "Bash(cd /Users/mac/Desktop/geealee/gada/gada-api && sed -n '1041,1088p' prisma/schema.prisma)",
+      "Bash(cd /Users/mac/Desktop/geealee/gada/gada-api && grep -n \"senderId\\\\|senderType\\\\|disputeMessage.create\" src/disputes/disputes.service.ts)",
+      "Bash(cd /Users/mac/Desktop/geealee/gada/gada-api && sed -n '150,180p' src/disputes/disputes.service.ts)",
+      "Bash(cd /Users/mac/Desktop/geealee/gada/gada-api && grep -n \"getPurchaseDetail\\\\|refundPurchase\\\\b\" -A 40 src/payments/refunds.service.ts 2>/dev/null | head -100)",
+      "Bash(cd /Users/mac/Desktop/geealee/gada/gada-api && grep -rln \"getPurchaseDetail\\\\|refundPurchase\\(\" --include=\"*.ts\" src | grep -v spec)",
+      "Bash(cd /Users/mac/Desktop/geealee/gada/gada-api && cat src/shared/services/refund.service.ts)",
+      "Bash(mkdir -p \"/Users/mac/Desktop/geealee/gada/gada-admin/app/dashboard/disputes/[id]\")"
     ],
     "additionalDirectories": [
-      "/Users/mac/Desktop/geealee/gada/gada-admin/app/dashboard/vendors"
+      "/Users/mac/Desktop/geealee/gada/gada-admin/app/dashboard/vendors",
+      "/Users/mac/Desktop/geealee/gada/gada-admin/app/dashboard/disputes"
     ]
   }
 }

@@ -32,6 +32,7 @@ import type {
   AdminControllerChartUsersParams,
   AdminControllerListAdminLogsParams,
   AdminControllerListConvenersParams,
+  AdminControllerListDisputesParams,
   AdminControllerListEventsParams,
   AdminControllerListSettlementsParams,
   AdminControllerListSosEventsParams,
@@ -40,9 +41,12 @@ import type {
   AdminControllerListVendorsParams,
   AdminControllerListVolunteersParams,
   BroadcastDto,
+  ChangeDisputeStatusDto,
   CreateAdminDto,
+  CreateDisputeMessageDto,
   ReasonDto,
-  RefundPurchaseDto
+  RefundPurchaseDto,
+  ResolveDisputeDto
 } from '.././model';
 
 import { customInstance } from '../../client';
@@ -3098,6 +3102,487 @@ export function useAdminControllerGetSettlement<TData = Awaited<ReturnType<typeo
 
 
 /**
+ * @summary List disputes (filters: status, type, date range)
+ */
+export type adminControllerListDisputesResponse200 = {
+  data: void
+  status: 200
+}
+    
+export type adminControllerListDisputesResponseSuccess = (adminControllerListDisputesResponse200) & {
+  headers: Headers;
+};
+;
+
+export type adminControllerListDisputesResponse = (adminControllerListDisputesResponseSuccess)
+
+export const getAdminControllerListDisputesUrl = (params: AdminControllerListDisputesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/v1/admin/disputes?${stringifiedParams}` : `/v1/admin/disputes`
+}
+
+export const adminControllerListDisputes = async (params: AdminControllerListDisputesParams, options?: RequestInit): Promise<adminControllerListDisputesResponse> => {
+  
+  return customInstance<adminControllerListDisputesResponse>(getAdminControllerListDisputesUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getAdminControllerListDisputesQueryKey = (params?: AdminControllerListDisputesParams,) => {
+    return [
+    `/v1/admin/disputes`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getAdminControllerListDisputesQueryOptions = <TData = Awaited<ReturnType<typeof adminControllerListDisputes>>, TError = unknown>(params: AdminControllerListDisputesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerListDisputes>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminControllerListDisputesQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerListDisputes>>> = ({ signal }) => adminControllerListDisputes(params, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminControllerListDisputes>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminControllerListDisputesQueryResult = NonNullable<Awaited<ReturnType<typeof adminControllerListDisputes>>>
+export type AdminControllerListDisputesQueryError = unknown
+
+
+export function useAdminControllerListDisputes<TData = Awaited<ReturnType<typeof adminControllerListDisputes>>, TError = unknown>(
+ params: AdminControllerListDisputesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerListDisputes>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminControllerListDisputes>>,
+          TError,
+          Awaited<ReturnType<typeof adminControllerListDisputes>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminControllerListDisputes<TData = Awaited<ReturnType<typeof adminControllerListDisputes>>, TError = unknown>(
+ params: AdminControllerListDisputesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerListDisputes>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminControllerListDisputes>>,
+          TError,
+          Awaited<ReturnType<typeof adminControllerListDisputes>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminControllerListDisputes<TData = Awaited<ReturnType<typeof adminControllerListDisputes>>, TError = unknown>(
+ params: AdminControllerListDisputesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerListDisputes>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List disputes (filters: status, type, date range)
+ */
+
+export function useAdminControllerListDisputes<TData = Awaited<ReturnType<typeof adminControllerListDisputes>>, TError = unknown>(
+ params: AdminControllerListDisputesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerListDisputes>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminControllerListDisputesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+/**
+ * @summary Dispute detail + thread + filer + anchor entity summary
+ */
+export type adminControllerGetDisputeResponse200 = {
+  data: void
+  status: 200
+}
+    
+export type adminControllerGetDisputeResponseSuccess = (adminControllerGetDisputeResponse200) & {
+  headers: Headers;
+};
+;
+
+export type adminControllerGetDisputeResponse = (adminControllerGetDisputeResponseSuccess)
+
+export const getAdminControllerGetDisputeUrl = (id: string,) => {
+
+
+  
+
+  return `/v1/admin/disputes/${id}`
+}
+
+export const adminControllerGetDispute = async (id: string, options?: RequestInit): Promise<adminControllerGetDisputeResponse> => {
+  
+  return customInstance<adminControllerGetDisputeResponse>(getAdminControllerGetDisputeUrl(id),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getAdminControllerGetDisputeQueryKey = (id?: string,) => {
+    return [
+    `/v1/admin/disputes/${id}`
+    ] as const;
+    }
+
+    
+export const getAdminControllerGetDisputeQueryOptions = <TData = Awaited<ReturnType<typeof adminControllerGetDispute>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetDispute>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminControllerGetDisputeQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetDispute>>> = ({ signal }) => adminControllerGetDispute(id, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetDispute>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminControllerGetDisputeQueryResult = NonNullable<Awaited<ReturnType<typeof adminControllerGetDispute>>>
+export type AdminControllerGetDisputeQueryError = unknown
+
+
+export function useAdminControllerGetDispute<TData = Awaited<ReturnType<typeof adminControllerGetDispute>>, TError = unknown>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetDispute>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminControllerGetDispute>>,
+          TError,
+          Awaited<ReturnType<typeof adminControllerGetDispute>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminControllerGetDispute<TData = Awaited<ReturnType<typeof adminControllerGetDispute>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetDispute>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminControllerGetDispute>>,
+          TError,
+          Awaited<ReturnType<typeof adminControllerGetDispute>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminControllerGetDispute<TData = Awaited<ReturnType<typeof adminControllerGetDispute>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetDispute>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Dispute detail + thread + filer + anchor entity summary
+ */
+
+export function useAdminControllerGetDispute<TData = Awaited<ReturnType<typeof adminControllerGetDispute>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetDispute>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminControllerGetDisputeQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+/**
+ * @summary Post an admin message (auto OPEN→UNDER_REVIEW; notifies filer)
+ */
+export type adminControllerAddDisputeMessageResponse201 = {
+  data: void
+  status: 201
+}
+    
+export type adminControllerAddDisputeMessageResponseSuccess = (adminControllerAddDisputeMessageResponse201) & {
+  headers: Headers;
+};
+;
+
+export type adminControllerAddDisputeMessageResponse = (adminControllerAddDisputeMessageResponseSuccess)
+
+export const getAdminControllerAddDisputeMessageUrl = (id: string,) => {
+
+
+  
+
+  return `/v1/admin/disputes/${id}/messages`
+}
+
+export const adminControllerAddDisputeMessage = async (id: string,
+    createDisputeMessageDto: CreateDisputeMessageDto, options?: RequestInit): Promise<adminControllerAddDisputeMessageResponse> => {
+  
+  return customInstance<adminControllerAddDisputeMessageResponse>(getAdminControllerAddDisputeMessageUrl(id),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      createDisputeMessageDto,)
+  }
+);}
+
+
+
+
+export const getAdminControllerAddDisputeMessageMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminControllerAddDisputeMessage>>, TError,{id: string;data: CreateDisputeMessageDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminControllerAddDisputeMessage>>, TError,{id: string;data: CreateDisputeMessageDto}, TContext> => {
+
+const mutationKey = ['adminControllerAddDisputeMessage'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminControllerAddDisputeMessage>>, {id: string;data: CreateDisputeMessageDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  adminControllerAddDisputeMessage(id,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminControllerAddDisputeMessageMutationResult = NonNullable<Awaited<ReturnType<typeof adminControllerAddDisputeMessage>>>
+    export type AdminControllerAddDisputeMessageMutationBody = CreateDisputeMessageDto
+    export type AdminControllerAddDisputeMessageMutationError = unknown
+
+    /**
+ * @summary Post an admin message (auto OPEN→UNDER_REVIEW; notifies filer)
+ */
+export const useAdminControllerAddDisputeMessage = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminControllerAddDisputeMessage>>, TError,{id: string;data: CreateDisputeMessageDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminControllerAddDisputeMessage>>,
+        TError,
+        {id: string;data: CreateDisputeMessageDto},
+        TContext
+      > => {
+
+      const mutationOptions = getAdminControllerAddDisputeMessageMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Manual status override (non-terminal); audited
+ */
+export type adminControllerChangeDisputeStatusResponse200 = {
+  data: void
+  status: 200
+}
+    
+export type adminControllerChangeDisputeStatusResponseSuccess = (adminControllerChangeDisputeStatusResponse200) & {
+  headers: Headers;
+};
+;
+
+export type adminControllerChangeDisputeStatusResponse = (adminControllerChangeDisputeStatusResponseSuccess)
+
+export const getAdminControllerChangeDisputeStatusUrl = (id: string,) => {
+
+
+  
+
+  return `/v1/admin/disputes/${id}/status`
+}
+
+export const adminControllerChangeDisputeStatus = async (id: string,
+    changeDisputeStatusDto: ChangeDisputeStatusDto, options?: RequestInit): Promise<adminControllerChangeDisputeStatusResponse> => {
+  
+  return customInstance<adminControllerChangeDisputeStatusResponse>(getAdminControllerChangeDisputeStatusUrl(id),
+  {      
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      changeDisputeStatusDto,)
+  }
+);}
+
+
+
+
+export const getAdminControllerChangeDisputeStatusMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminControllerChangeDisputeStatus>>, TError,{id: string;data: ChangeDisputeStatusDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminControllerChangeDisputeStatus>>, TError,{id: string;data: ChangeDisputeStatusDto}, TContext> => {
+
+const mutationKey = ['adminControllerChangeDisputeStatus'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminControllerChangeDisputeStatus>>, {id: string;data: ChangeDisputeStatusDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  adminControllerChangeDisputeStatus(id,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminControllerChangeDisputeStatusMutationResult = NonNullable<Awaited<ReturnType<typeof adminControllerChangeDisputeStatus>>>
+    export type AdminControllerChangeDisputeStatusMutationBody = ChangeDisputeStatusDto
+    export type AdminControllerChangeDisputeStatusMutationError = unknown
+
+    /**
+ * @summary Manual status override (non-terminal); audited
+ */
+export const useAdminControllerChangeDisputeStatus = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminControllerChangeDisputeStatus>>, TError,{id: string;data: ChangeDisputeStatusDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminControllerChangeDisputeStatus>>,
+        TError,
+        {id: string;data: ChangeDisputeStatusDto},
+        TContext
+      > => {
+
+      const mutationOptions = getAdminControllerChangeDisputeStatusMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Resolve (or reject) a dispute; optional refund via the real RefundService; audited; notifies filer
+ */
+export type adminControllerResolveDisputeResponse200 = {
+  data: void
+  status: 200
+}
+    
+export type adminControllerResolveDisputeResponseSuccess = (adminControllerResolveDisputeResponse200) & {
+  headers: Headers;
+};
+;
+
+export type adminControllerResolveDisputeResponse = (adminControllerResolveDisputeResponseSuccess)
+
+export const getAdminControllerResolveDisputeUrl = (id: string,) => {
+
+
+  
+
+  return `/v1/admin/disputes/${id}/resolve`
+}
+
+export const adminControllerResolveDispute = async (id: string,
+    resolveDisputeDto: ResolveDisputeDto, options?: RequestInit): Promise<adminControllerResolveDisputeResponse> => {
+  
+  return customInstance<adminControllerResolveDisputeResponse>(getAdminControllerResolveDisputeUrl(id),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      resolveDisputeDto,)
+  }
+);}
+
+
+
+
+export const getAdminControllerResolveDisputeMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminControllerResolveDispute>>, TError,{id: string;data: ResolveDisputeDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminControllerResolveDispute>>, TError,{id: string;data: ResolveDisputeDto}, TContext> => {
+
+const mutationKey = ['adminControllerResolveDispute'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminControllerResolveDispute>>, {id: string;data: ResolveDisputeDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  adminControllerResolveDispute(id,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminControllerResolveDisputeMutationResult = NonNullable<Awaited<ReturnType<typeof adminControllerResolveDispute>>>
+    export type AdminControllerResolveDisputeMutationBody = ResolveDisputeDto
+    export type AdminControllerResolveDisputeMutationError = unknown
+
+    /**
+ * @summary Resolve (or reject) a dispute; optional refund via the real RefundService; audited; notifies filer
+ */
+export const useAdminControllerResolveDispute = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminControllerResolveDispute>>, TError,{id: string;data: ResolveDisputeDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminControllerResolveDispute>>,
+        TError,
+        {id: string;data: ResolveDisputeDto},
+        TContext
+      > => {
+
+      const mutationOptions = getAdminControllerResolveDisputeMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
  * @summary Admin action audit log (super admin only). Filter by action, adminId, and date range.
  */
 export type adminControllerListAdminLogsResponse200 = {
