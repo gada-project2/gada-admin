@@ -169,7 +169,12 @@ export interface CalendarEventItem {
 export type CalendarData = CalendarEventItem[];
 
 // ─── Conveners ────────────────────────────────────────────────────────────────
-// GET /v1/admin/users/conveners — aggregate rows, NOT full user records.
+// GET /v1/admin/users/conveners (list) and GET /v1/admin/users/conveners/{id}
+// (detail) — aggregate rows, NOT full user records. Same shape for both list
+// row and detail response (AdminService.getConvener returns identical fields
+// to listConveners' rows, just for one id). Verified against source
+// (AdminService.getConvener) 2026-08-04. `id` here IS the User's own id —
+// unlike Vendor, a convener has no separate profile table/id.
 
 export interface Convener {
   id: string;

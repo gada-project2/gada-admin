@@ -259,15 +259,19 @@ export default function UserDetailView({ id }: Props) {
           ))}
         </div>
 
-        {/* Capability badges. Vendor now links to the real Vendor Detail page
-            using vendorProfileId (VendorProfile.id — NOT this user's own id;
-            getUser joins it in specifically for this link). Convener stays a
-            static badge: app/dashboard/conveners/[id] doesn't exist in this
-            app yet, so linking there would 404 — same discipline as
-            AdminLogsList's TargetCell, which only links Event because that's
-            the only detail route that's real. */}
+        {/* Capability badges. Vendor links via vendorProfileId (VendorProfile.id
+            — NOT this user's own id; getUser joins it in specifically for this
+            link). Convener links via user.id directly — a convener has no
+            separate profile table, GET /admin/users/conveners/{id} is keyed
+            by the User's own id (verified against source,
+            AdminService.getConvener). Volunteer stays a static badge: there is
+            no volunteer detail route in this app at all. */}
         <div className="flex gap-2 flex-wrap pt-1">
-          <CapabilityBadge on={user.canConvene} label="Convener" />
+          <CapabilityBadge
+            on={user.canConvene}
+            label="Convener"
+            href={user.canConvene ? `/dashboard/conveners/${user.id}` : null}
+          />
           <CapabilityBadge
             on={user.isVendor}
             label="Vendor"

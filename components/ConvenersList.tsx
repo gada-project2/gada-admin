@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   adminControllerListConveners,
@@ -63,6 +64,7 @@ function RemoveDialog({
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function ConvenersList() {
+  const router = useRouter();
   const queryClient = useQueryClient();
 
   const [pendingAction, setPendingAction] = useState<{
@@ -222,6 +224,7 @@ export default function ConvenersList() {
             emptyLabel="No conveners found"
             emptyNote="No users have created events yet."
             rowActions={rowActions}
+            onRowClick={(row) => router.push(`/dashboard/conveners/${row.id}`)}
             meta={meta}
             page={page}
             onPageChange={setPage}
