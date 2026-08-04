@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   adminControllerListVendors,
@@ -43,6 +44,7 @@ function StatusBadge({ status }: { status: VendorStatus }) {
 // so the status and search filters were removed too.
 
 export default function VendorsList() {
+  const router = useRouter();
   const queryClient = useQueryClient();
 
   const [pendingAction, setPendingAction] = useState<{
@@ -185,6 +187,7 @@ export default function VendorsList() {
             emptyLabel="No vendors found"
             emptyNote="No vendors have registered yet."
             rowActions={rowActions}
+            onRowClick={(row) => router.push(`/dashboard/vendors/${row.id}`)}
             meta={meta}
             page={page}
             onPageChange={setPage}

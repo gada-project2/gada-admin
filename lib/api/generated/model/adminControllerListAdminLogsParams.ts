@@ -6,8 +6,11 @@
  * OpenAPI spec version: 1.0
  */
 
-export type AdminControllerListTicketsParams = {
+export type AdminControllerListAdminLogsParams = {
 page: string;
 perPage: string;
-userId: string;
+action: string;
+adminId: string;
+dateFrom: string;
+dateTo: string;
 };

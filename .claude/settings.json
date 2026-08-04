@@ -1,7 +1,16 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(npm run *)",
+      "Bash(cd /Users/mac/Desktop/geealee/gada/gada-api && sed -n '119,152p' src/admin/admin.controller.ts)",
+      "Read(//Users/mac/Desktop/geealee/gada/gada-api/**)",
+      "Bash(npx eslint *)",
+      "Bash(cd /Users/mac/Desktop/geealee/gada/gada-api && grep -n \"enum VendorStatus\" -A 6 prisma/schema.prisma; echo \"---routes---\"; sed -n '172,198p' src/admin/admin.controller.ts)",
+      "Bash(mkdir -p \"/Users/mac/Desktop/geealee/gada/gada-admin/app/dashboard/vendors/[id]\")"
+    ],
+    "additionalDirectories": [
+      "/Users/mac/Desktop/geealee/gada/gada-admin/app/dashboard/vendors"
     ]
   }
 }

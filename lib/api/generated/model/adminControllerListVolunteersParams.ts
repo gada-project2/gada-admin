@@ -9,4 +9,7 @@
 export type AdminControllerListVolunteersParams = {
 page: string;
 perPage: string;
+userId: string;
+status: string;
+eventId: string;
 };

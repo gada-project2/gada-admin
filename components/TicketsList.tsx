@@ -33,9 +33,11 @@ function StatusBadge({ status }: { status: TicketStatus }) {
 // ─── Main component ───────────────────────────────────────────────────────────
 // READ-ONLY: no ticket mutations exist on the admin API.
 //
-// GET /v1/admin/tickets accepts page + perPage ONLY. The previous search box and
-// From/To date filters called parameters this endpoint does not have, so they
-// were removed rather than left as controls that silently do nothing.
+// GET /v1/admin/tickets accepts page + perPage + userId (the latter is used
+// by the User Detail page to scope this same list to one buyer). The previous
+// search box and From/To date filters called parameters this endpoint does
+// not have, so they were removed rather than left as controls that silently
+// do nothing.
 
 export default function TicketsList() {
   const { rows, meta, isLoading, isError, refetch, page, setPage } =
@@ -45,6 +47,9 @@ export default function TicketsList() {
       mapParams: ({ page, perPage }) => ({
         page: String(page),
         perPage: String(perPage),
+        // userId filter exists on the API (used by the per-user purchase
+        // history on the User Detail page) — unfiltered on this screen.
+        userId: "",
       }),
       extractRows: (data) => (data as TicketListResponse | undefined)?.data ?? [],
       extractMeta: (data) => (data as TicketListResponse | undefined)?.meta,

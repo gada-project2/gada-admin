@@ -6,8 +6,10 @@
  * OpenAPI spec version: 1.0
  */
 
-export type AdminControllerListTicketsParams = {
+export type AdminControllerListSettlementsParams = {
 page: string;
 perPage: string;
-userId: string;
+status: string;
+dateFrom: string;
+dateTo: string;
 };

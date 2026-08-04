@@ -9,6 +9,7 @@
 export type AdminControllerListEventsParams = {
 status: string;
 search: string;
+convenerId: string;
 page: string;
 perPage: string;
 };

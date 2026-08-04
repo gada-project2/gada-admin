@@ -7,31 +7,49 @@ import {
   CheckSquare,
   Store,
   Users,
+  UserCircle,
   Ticket,
   Bell,
   Calendar,
   Settings,
   LogOut,
   Wallet,
+  Landmark,
   ShieldAlert,
+  ScrollText,
 } from "lucide-react";
+import { useAdmin } from "@/lib/hooks/useAdmin";
 
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Event Moderation", href: "/dashboard/event-moderation", icon: CheckSquare },
+  { label: "Users", href: "/dashboard/users", icon: UserCircle },
   { label: "Vendors", href: "/dashboard/vendors", icon: Store },
   { label: "Conveners", href: "/dashboard/conveners", icon: Users },
   { label: "Ticketing", href: "/dashboard/ticketing", icon: Ticket },
   { label: "Revenue", href: "/dashboard/revenue", icon: Wallet },
+  // Settlement visibility is oversight, not a money-movement action or the
+  // security-log territory that requires super-admin restriction (see Action
+  // Log below) — visible to every admin.
+  { label: "Settlements", href: "/dashboard/settlements", icon: Landmark },
   { label: "SOS Events", href: "/dashboard/sos", icon: ShieldAlert },
   { label: "Notifications", href: "/dashboard/notifications", icon: Bell },
   { label: "Calendar", href: "/dashboard/calendar", icon: Calendar },
+  // superOnly: hidden entirely for regular admins — the backend also enforces
+  // this (AdminService.requireSuper on GET /admin/logs), so this is a UX nicety
+  // on top of a real server-side guard, not a substitute for it.
+  { label: "Action Log", href: "/dashboard/logs", icon: ScrollText, superOnly: true },
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const { admin } = useAdmin();
+
+  // Hidden until super-admin status is positively confirmed — during loading
+  // (admin undefined) the item stays hidden rather than flashing then vanishing.
+  const visibleNavItems = navItems.filter((item) => !item.superOnly || admin?.isSuperAdmin);
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -49,7 +67,7 @@ export default function Sidebar() {
       {/* Menu */}
       <nav className="flex-1 py-4 px-3 flex flex-col gap-0.5">
         <p className="text-xs font-bold px-3 pb-2 tracking-wider text-gada-text-secondary">MENU</p>
-        {navItems.map(({ label, href, icon: Icon }) => {
+        {visibleNavItems.map(({ label, href, icon: Icon }) => {
           const active = pathname === href;
           return (
             <Link

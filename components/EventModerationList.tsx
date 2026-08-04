@@ -194,6 +194,9 @@ export default function EventModerationList() {
     perPage: String(PAGE_SIZE),
     status: statusFilter !== "All" ? statusFilter : "",
     search: searchInUrl,
+    // convenerId filter exists on the API but this screen has no per-convener
+    // view yet — always unfiltered here.
+    convenerId: "",
   };
 
   const { data: eventsRaw, isLoading: eventsLoading, isError: eventsError, refetch: refetchEvents } =

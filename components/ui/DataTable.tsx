@@ -26,6 +26,8 @@ interface DataTableProps<TRow> {
   filters?: ReactNode;
   // Per-row action slot rendered in a trailing "Action" column
   rowActions?: (row: TRow) => ReactNode;
+  // Optional row click handler — when set, rows get a pointer cursor and hover cue.
+  onRowClick?: (row: TRow) => void;
   meta: PaginationMeta | undefined;
   page: number;
   onPageChange: (p: number) => void;
@@ -41,6 +43,7 @@ export default function DataTable<TRow extends { id?: unknown }>({
   emptyNote,
   filters,
   rowActions,
+  onRowClick,
   meta,
   page,
   onPageChange,
@@ -93,7 +96,8 @@ export default function DataTable<TRow extends { id?: unknown }>({
               {rows.map((row, i) => (
                 <tr
                   key={String(row.id ?? i)}
-                  className="border-b border-gray-50 hover:bg-gray-50 transition-colors"
+                  onClick={onRowClick ? () => onRowClick(row) : undefined}
+                  className={`border-b border-gray-50 hover:bg-gray-50 transition-colors ${onRowClick ? "cursor-pointer" : ""}`}
                 >
                   {columns.map((col) => (
                     <td
@@ -106,7 +110,11 @@ export default function DataTable<TRow extends { id?: unknown }>({
                     </td>
                   ))}
                   {rowActions && (
-                    <td className="py-3 px-3">{rowActions(row)}</td>
+                    // Stop propagation so action buttons (suspend/restore/etc.)
+                    // don't also trigger onRowClick's navigation.
+                    <td className="py-3 px-3" onClick={(e) => e.stopPropagation()}>
+                      {rowActions(row)}
+                    </td>
                   )}
                 </tr>
               ))}

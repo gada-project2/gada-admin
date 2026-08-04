@@ -32,6 +32,10 @@ export interface DashboardStats {
   checkedInToday: number;
   newUsersToday: number;
   newEventsToday: number;
+  // Settlement money currently held (awaiting release) vs paid out all-time.
+  // Verified against source (AdminService.getStats) 2026-08-04.
+  totalHeldKobo: number;
+  totalReleasedKobo: number;
 }
 
 // ─── Charts ───────────────────────────────────────────────────────────────────
@@ -182,27 +186,56 @@ export interface ConvenerListResponse {
 }
 
 // ─── Platform users ───────────────────────────────────────────────────────────
-// GET /v1/admin/users
+// GET /v1/admin/users (list, filters: status/role/search) and
+// GET /v1/admin/users/{id} (detail). Verified against source
+// (AdminService.listUsers / getUser) 2026-08-04. `ninVerified` is the only KYC
+// signal admin ever sees — the raw NIN is bcrypt-hashed at rest (User.ninHash)
+// and no endpoint anywhere selects or returns it.
 
-export type UserStatus = 'ACTIVE' | 'SUSPENDED';
+export type UserStatus = 'ACTIVE' | 'SUSPENDED' | 'DELETED';
+export type UserRole = 'USER' | 'ADMIN';
 
 export interface PlatformUser {
   id: string;
   email: string;
-  displayName: string;
+  displayName: string | null;
   photoKey: string | null;
-  role: string;
+  role: UserRole | string;
   status: UserStatus;
   canConvene: boolean;
   isVendor: boolean;
   isVolunteer: boolean;
+  ninVerified: boolean;
   createdAt: string;
 }
 
-// ─── Vendors ──────────────────────────────────────────────────────────────────
-// GET /v1/admin/vendors. Admin actions: suspend + restore only (no delete).
+export interface UserListResponse {
+  data: PlatformUser[];
+  meta: PaginationMeta;
+}
 
-export type VendorStatus = 'ACTIVE' | 'SUSPENDED';
+// GET /v1/admin/users/{id} — same fields as the list row plus profile detail.
+export interface UserDetail extends PlatformUser {
+  phoneNumber: string | null;
+  bio: string | null;
+  isEmailVerified: boolean;
+  isPhoneVerified: boolean;
+  dateOfBirth: string | null;
+  updatedAt: string;
+  deletedAt: string | null;
+  // VendorProfile.id (NOT the same as this user's own id) — lets the Vendor
+  // capability badge link straight to /dashboard/vendors/{vendorProfileId}.
+  // null whenever isVendor is false.
+  vendorProfileId: string | null;
+}
+
+// ─── Vendors ──────────────────────────────────────────────────────────────────
+// GET /v1/admin/vendors (list) and GET /v1/admin/vendors/{id} (detail, full
+// gallery + products + booth history). Admin actions: suspend + restore only
+// (no delete). Verified against source (AdminService.listVendors / getVendor)
+// 2026-08-04.
+
+export type VendorStatus = 'DRAFT' | 'ACTIVE' | 'SUSPENDED';
 
 export interface Vendor {
   id: string;
@@ -230,6 +263,47 @@ export interface VendorListResponse {
   meta: PaginationMeta;
 }
 
+export interface VendorGalleryImage {
+  id: string;
+  imageKey: string;
+  caption: string | null;
+  createdAt: string;
+}
+
+export interface VendorProduct {
+  id: string;
+  productName: string;
+  description: string | null;
+  priceKobo: number;
+  thumbnailKey: string | null;
+  isAvailable: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface VendorBoothEventRef {
+  id: string;
+  name: string;
+}
+
+export interface VendorBooth {
+  id: string;
+  eventId: string;
+  event: VendorBoothEventRef | null;
+  latitude: number;
+  longitude: number;
+  boothNo: string | null;
+  createdAt: string;
+}
+
+// GET /v1/admin/vendors/{id} — same fields as the list row, but `gallery` is
+// the FULL set (not the list's take:1 fallback), plus products and booths.
+export interface VendorDetail extends Omit<Vendor, 'gallery'> {
+  gallery: VendorGalleryImage[];
+  products: VendorProduct[];
+  booths: VendorBooth[];
+}
+
 // ─── Tickets ──────────────────────────────────────────────────────────────────
 // GET /v1/admin/tickets — read-only, no mutations exist.
 
@@ -253,6 +327,8 @@ export interface TicketListResponse {
 
 // ─── Volunteers ───────────────────────────────────────────────────────────────
 // GET /v1/admin/volunteers — read-only for admin (no suspend endpoint anymore).
+// Filters: userId, status, eventId (all optional). Verified against source
+// (AdminService.listVolunteers) 2026-08-04.
 
 export interface VolunteerApplication {
   id: string;
@@ -270,6 +346,11 @@ export interface VolunteerApplication {
   user: { id: string; displayName: string; email: string } | null;
   event: { id: string; name: string } | null;
   role: { id: string; name: string } | null;
+}
+
+export interface VolunteerListResponse {
+  data: VolunteerApplication[];
+  meta: PaginationMeta;
 }
 
 // ─── Admin accounts ───────────────────────────────────────────────────────────
@@ -350,4 +431,100 @@ export interface SosRevealResult {
   eventId: string | null;
   eventName: string | null;
   createdAt: string;
+}
+
+// ─── Admin action log ─────────────────────────────────────────────────────────
+// GET /v1/admin/logs — super-admin only server-side (AdminService.requireSuper
+// throws ForbiddenException({code:'SUPER_ADMIN_ONLY', ...}) for non-super
+// callers). `action` is a bare string column, not an enum — the full set of
+// values the backend currently ever writes (verified against every
+// `this.log(...)` / `adminLog.create(...)` call site 2026-08-04):
+//   ADMIN_CREATED, ADMIN_DELETED, EVENT_DELETED, EVENT_SUSPENDED,
+//   REFUND_PURCHASE, SOS_REVEALED, USER_DELETED, USER_RESTORED,
+//   USER_SUSPENDED, VENDOR_RESTORED, VENDOR_SUSPENDED
+// New actions can be added server-side without a frontend change — the type
+// stays `string`, only the filter dropdown's option list needs updating.
+
+export const ADMIN_LOG_ACTIONS = [
+  'ADMIN_CREATED',
+  'ADMIN_DELETED',
+  'EVENT_DELETED',
+  'EVENT_SUSPENDED',
+  'REFUND_PURCHASE',
+  'SOS_REVEALED',
+  'USER_DELETED',
+  'USER_RESTORED',
+  'USER_SUSPENDED',
+  'VENDOR_RESTORED',
+  'VENDOR_SUSPENDED',
+] as const;
+
+export interface AdminLogRow {
+  id: string;
+  admin: { id: string; name: string; email: string } | null; // null if the admin account was later deleted
+  adminId: string;
+  action: string;
+  targetType: string | null;
+  targetId: string | null;
+  reason: string | null;
+  metadata: unknown;
+  createdAt: string;
+}
+
+export interface AdminLogListResponse {
+  data: AdminLogRow[];
+  meta: PaginationMeta;
+}
+
+// ─── Settlements ──────────────────────────────────────────────────────────────
+// GET /v1/admin/settlements and /v1/admin/settlements/{id} — read-only, backed
+// by the EventPayout table. Admin sees paystackTransferCode unconditionally
+// (unlike the convener-facing view, which hides it until RELEASED). Verified
+// against source (AdminService.mapAdminSettlement / listSettlements /
+// getSettlement) 2026-08-04.
+
+export type SettlementStatus = 'HELD' | 'RELEASED' | 'FAILED';
+
+export interface SettlementEventRef {
+  id: string;
+  name: string;
+}
+
+export interface SettlementConvener {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface Settlement {
+  id: string;
+  event: SettlementEventRef | null;
+  convener: SettlementConvener | null;
+  amountKobo: number;
+  status: SettlementStatus;
+  releasedAt: string | null;
+  paystackTransferCode: string | null;
+  createdAt: string;
+}
+
+export interface SettlementListResponse {
+  data: Settlement[];
+  meta: PaginationMeta;
+}
+
+// Contributing-transaction line item — the Payments (SUCCESS/REFUNDED) that
+// funded this settlement's event, mirroring the convener earnings report.
+export interface SettlementTransaction {
+  id: string;
+  eventId: string;
+  eventName: string | null;
+  buyerName: string;
+  amountKobo: number;
+  netKobo: number;
+  status: 'SUCCESS' | 'REFUNDED' | string;
+  createdAt: string;
+}
+
+export interface SettlementDetail extends Settlement {
+  transactions: SettlementTransaction[];
 }
