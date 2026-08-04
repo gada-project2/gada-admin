@@ -12,6 +12,8 @@ import {
   Calendar,
   Settings,
   LogOut,
+  Wallet,
+  ShieldAlert,
 } from "lucide-react";
 
 const navItems = [
@@ -20,6 +22,8 @@ const navItems = [
   { label: "Vendors", href: "/dashboard/vendors", icon: Store },
   { label: "Conveners", href: "/dashboard/conveners", icon: Users },
   { label: "Ticketing", href: "/dashboard/ticketing", icon: Ticket },
+  { label: "Revenue", href: "/dashboard/revenue", icon: Wallet },
+  { label: "SOS Events", href: "/dashboard/sos", icon: ShieldAlert },
   { label: "Notifications", href: "/dashboard/notifications", icon: Bell },
   { label: "Calendar", href: "/dashboard/calendar", icon: Calendar },
   { label: "Settings", href: "/dashboard/settings", icon: Settings },

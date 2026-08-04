@@ -319,3 +319,35 @@ export interface BroadcastBody {
   body: string;
   userIds?: string[]; // omit / empty = broadcast to all users
 }
+
+// ─── Safety / SOS ─────────────────────────────────────────────────────────────
+// GET /v1/admin/safety/sos — deliberately PII-free: no identity, no
+// coordinates. Only GET /v1/admin/safety/sos/{id}/reveal returns those, and
+// every reveal call is unconditionally audited server-side (AdminLog
+// SOS_REVEALED). Verified against source 2026-08-04.
+
+export interface SosSummaryRow {
+  id: string;
+  eventId: string | null;
+  eventName: string | null;
+  alertsSent: number;
+  hasLocation: boolean;
+  createdAt: string;
+}
+
+export interface SosListResponse {
+  data: SosSummaryRow[];
+  meta: PaginationMeta;
+}
+
+export interface SosRevealResult {
+  id: string;
+  user: { id: string; displayName: string | null; email: string };
+  latitude: number | null;
+  longitude: number | null;
+  note: string | null;
+  alertsSent: number;
+  eventId: string | null;
+  eventName: string | null;
+  createdAt: string;
+}

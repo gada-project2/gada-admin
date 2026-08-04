@@ -15,4 +15,5 @@ export interface CreateVendorDto {
   boothAddress?: string;
   boothLat?: number;
   boothLng?: number;
+  logoKey?: string;
 }

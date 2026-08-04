@@ -32,13 +32,15 @@ import type {
   AdminControllerChartUsersParams,
   AdminControllerListConvenersParams,
   AdminControllerListEventsParams,
+  AdminControllerListSosEventsParams,
   AdminControllerListTicketsParams,
   AdminControllerListUsersParams,
   AdminControllerListVendorsParams,
   AdminControllerListVolunteersParams,
   BroadcastDto,
   CreateAdminDto,
-  ReasonDto
+  ReasonDto,
+  RefundPurchaseDto
 } from '.././model';
 
 import { customInstance } from '../../client';
@@ -1918,7 +1920,202 @@ export function useAdminControllerListVolunteers<TData = Awaited<ReturnType<type
 
 
 
-export type adminControllerBroadcastResponse200 = {
+/**
+ * @summary Single purchase with payment + refund state (for the pre-refund confirmation view)
+ */
+export type adminControllerGetPurchaseResponse200 = {
+  data: void
+  status: 200
+}
+    
+export type adminControllerGetPurchaseResponseSuccess = (adminControllerGetPurchaseResponse200) & {
+  headers: Headers;
+};
+;
+
+export type adminControllerGetPurchaseResponse = (adminControllerGetPurchaseResponseSuccess)
+
+export const getAdminControllerGetPurchaseUrl = (id: string,) => {
+
+
+  
+
+  return `/v1/admin/purchases/${id}`
+}
+
+export const adminControllerGetPurchase = async (id: string, options?: RequestInit): Promise<adminControllerGetPurchaseResponse> => {
+  
+  return customInstance<adminControllerGetPurchaseResponse>(getAdminControllerGetPurchaseUrl(id),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getAdminControllerGetPurchaseQueryKey = (id?: string,) => {
+    return [
+    `/v1/admin/purchases/${id}`
+    ] as const;
+    }
+
+    
+export const getAdminControllerGetPurchaseQueryOptions = <TData = Awaited<ReturnType<typeof adminControllerGetPurchase>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetPurchase>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminControllerGetPurchaseQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetPurchase>>> = ({ signal }) => adminControllerGetPurchase(id, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetPurchase>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminControllerGetPurchaseQueryResult = NonNullable<Awaited<ReturnType<typeof adminControllerGetPurchase>>>
+export type AdminControllerGetPurchaseQueryError = unknown
+
+
+export function useAdminControllerGetPurchase<TData = Awaited<ReturnType<typeof adminControllerGetPurchase>>, TError = unknown>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetPurchase>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminControllerGetPurchase>>,
+          TError,
+          Awaited<ReturnType<typeof adminControllerGetPurchase>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminControllerGetPurchase<TData = Awaited<ReturnType<typeof adminControllerGetPurchase>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetPurchase>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminControllerGetPurchase>>,
+          TError,
+          Awaited<ReturnType<typeof adminControllerGetPurchase>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminControllerGetPurchase<TData = Awaited<ReturnType<typeof adminControllerGetPurchase>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetPurchase>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Single purchase with payment + refund state (for the pre-refund confirmation view)
+ */
+
+export function useAdminControllerGetPurchase<TData = Awaited<ReturnType<typeof adminControllerGetPurchase>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetPurchase>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminControllerGetPurchaseQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+/**
+ * @summary Refund all or part of a purchase. MOVES REAL MONEY. Reason required and audited.
+ */
+export type adminControllerRefundPurchaseResponse200 = {
+  data: void
+  status: 200
+}
+    
+export type adminControllerRefundPurchaseResponseSuccess = (adminControllerRefundPurchaseResponse200) & {
+  headers: Headers;
+};
+;
+
+export type adminControllerRefundPurchaseResponse = (adminControllerRefundPurchaseResponseSuccess)
+
+export const getAdminControllerRefundPurchaseUrl = (id: string,) => {
+
+
+  
+
+  return `/v1/admin/purchases/${id}/refund`
+}
+
+export const adminControllerRefundPurchase = async (id: string,
+    refundPurchaseDto: RefundPurchaseDto, options?: RequestInit): Promise<adminControllerRefundPurchaseResponse> => {
+  
+  return customInstance<adminControllerRefundPurchaseResponse>(getAdminControllerRefundPurchaseUrl(id),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      refundPurchaseDto,)
+  }
+);}
+
+
+
+
+export const getAdminControllerRefundPurchaseMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminControllerRefundPurchase>>, TError,{id: string;data: RefundPurchaseDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminControllerRefundPurchase>>, TError,{id: string;data: RefundPurchaseDto}, TContext> => {
+
+const mutationKey = ['adminControllerRefundPurchase'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminControllerRefundPurchase>>, {id: string;data: RefundPurchaseDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  adminControllerRefundPurchase(id,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminControllerRefundPurchaseMutationResult = NonNullable<Awaited<ReturnType<typeof adminControllerRefundPurchase>>>
+    export type AdminControllerRefundPurchaseMutationBody = RefundPurchaseDto
+    export type AdminControllerRefundPurchaseMutationError = unknown
+
+    /**
+ * @summary Refund all or part of a purchase. MOVES REAL MONEY. Reason required and audited.
+ */
+export const useAdminControllerRefundPurchase = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminControllerRefundPurchase>>, TError,{id: string;data: RefundPurchaseDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminControllerRefundPurchase>>,
+        TError,
+        {id: string;data: RefundPurchaseDto},
+        TContext
+      > => {
+
+      const mutationOptions = getAdminControllerRefundPurchaseMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    export type adminControllerBroadcastResponse200 = {
   data: void
   status: 200
 }
@@ -2097,6 +2294,235 @@ export function useAdminControllerCalendar<TData = Awaited<ReturnType<typeof adm
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getAdminControllerCalendarQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+/**
+ * @summary Summary list of SOS events (PII-free: no identity, no coordinates). Use the reveal endpoint for details.
+ */
+export type adminControllerListSosEventsResponse200 = {
+  data: void
+  status: 200
+}
+    
+export type adminControllerListSosEventsResponseSuccess = (adminControllerListSosEventsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type adminControllerListSosEventsResponse = (adminControllerListSosEventsResponseSuccess)
+
+export const getAdminControllerListSosEventsUrl = (params: AdminControllerListSosEventsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/v1/admin/safety/sos?${stringifiedParams}` : `/v1/admin/safety/sos`
+}
+
+export const adminControllerListSosEvents = async (params: AdminControllerListSosEventsParams, options?: RequestInit): Promise<adminControllerListSosEventsResponse> => {
+  
+  return customInstance<adminControllerListSosEventsResponse>(getAdminControllerListSosEventsUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getAdminControllerListSosEventsQueryKey = (params?: AdminControllerListSosEventsParams,) => {
+    return [
+    `/v1/admin/safety/sos`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getAdminControllerListSosEventsQueryOptions = <TData = Awaited<ReturnType<typeof adminControllerListSosEvents>>, TError = unknown>(params: AdminControllerListSosEventsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerListSosEvents>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminControllerListSosEventsQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerListSosEvents>>> = ({ signal }) => adminControllerListSosEvents(params, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminControllerListSosEvents>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminControllerListSosEventsQueryResult = NonNullable<Awaited<ReturnType<typeof adminControllerListSosEvents>>>
+export type AdminControllerListSosEventsQueryError = unknown
+
+
+export function useAdminControllerListSosEvents<TData = Awaited<ReturnType<typeof adminControllerListSosEvents>>, TError = unknown>(
+ params: AdminControllerListSosEventsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerListSosEvents>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminControllerListSosEvents>>,
+          TError,
+          Awaited<ReturnType<typeof adminControllerListSosEvents>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminControllerListSosEvents<TData = Awaited<ReturnType<typeof adminControllerListSosEvents>>, TError = unknown>(
+ params: AdminControllerListSosEventsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerListSosEvents>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminControllerListSosEvents>>,
+          TError,
+          Awaited<ReturnType<typeof adminControllerListSosEvents>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminControllerListSosEvents<TData = Awaited<ReturnType<typeof adminControllerListSosEvents>>, TError = unknown>(
+ params: AdminControllerListSosEventsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerListSosEvents>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Summary list of SOS events (PII-free: no identity, no coordinates). Use the reveal endpoint for details.
+ */
+
+export function useAdminControllerListSosEvents<TData = Awaited<ReturnType<typeof adminControllerListSosEvents>>, TError = unknown>(
+ params: AdminControllerListSosEventsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerListSosEvents>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminControllerListSosEventsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+/**
+ * @summary Reveal identity + location for a single SOS event. Audited on every call (AdminLog SOS_REVEALED).
+ */
+export type adminControllerRevealSosEventResponse200 = {
+  data: void
+  status: 200
+}
+    
+export type adminControllerRevealSosEventResponseSuccess = (adminControllerRevealSosEventResponse200) & {
+  headers: Headers;
+};
+;
+
+export type adminControllerRevealSosEventResponse = (adminControllerRevealSosEventResponseSuccess)
+
+export const getAdminControllerRevealSosEventUrl = (id: string,) => {
+
+
+  
+
+  return `/v1/admin/safety/sos/${id}/reveal`
+}
+
+export const adminControllerRevealSosEvent = async (id: string, options?: RequestInit): Promise<adminControllerRevealSosEventResponse> => {
+  
+  return customInstance<adminControllerRevealSosEventResponse>(getAdminControllerRevealSosEventUrl(id),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getAdminControllerRevealSosEventQueryKey = (id?: string,) => {
+    return [
+    `/v1/admin/safety/sos/${id}/reveal`
+    ] as const;
+    }
+
+    
+export const getAdminControllerRevealSosEventQueryOptions = <TData = Awaited<ReturnType<typeof adminControllerRevealSosEvent>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerRevealSosEvent>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminControllerRevealSosEventQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerRevealSosEvent>>> = ({ signal }) => adminControllerRevealSosEvent(id, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminControllerRevealSosEvent>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminControllerRevealSosEventQueryResult = NonNullable<Awaited<ReturnType<typeof adminControllerRevealSosEvent>>>
+export type AdminControllerRevealSosEventQueryError = unknown
+
+
+export function useAdminControllerRevealSosEvent<TData = Awaited<ReturnType<typeof adminControllerRevealSosEvent>>, TError = unknown>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerRevealSosEvent>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminControllerRevealSosEvent>>,
+          TError,
+          Awaited<ReturnType<typeof adminControllerRevealSosEvent>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminControllerRevealSosEvent<TData = Awaited<ReturnType<typeof adminControllerRevealSosEvent>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerRevealSosEvent>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminControllerRevealSosEvent>>,
+          TError,
+          Awaited<ReturnType<typeof adminControllerRevealSosEvent>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminControllerRevealSosEvent<TData = Awaited<ReturnType<typeof adminControllerRevealSosEvent>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerRevealSosEvent>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Reveal identity + location for a single SOS event. Audited on every call (AdminLog SOS_REVEALED).
+ */
+
+export function useAdminControllerRevealSosEvent<TData = Awaited<ReturnType<typeof adminControllerRevealSosEvent>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerRevealSosEvent>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminControllerRevealSosEventQueryOptions(id,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
