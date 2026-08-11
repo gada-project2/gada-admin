@@ -16,6 +16,7 @@ import {
   Wallet,
   Landmark,
   Gavel,
+  UsersRound,
   ShieldAlert,
   ScrollText,
 } from "lucide-react";
@@ -27,6 +28,8 @@ const navItems = [
   { label: "Users", href: "/dashboard/users", icon: UserCircle },
   { label: "Vendors", href: "/dashboard/vendors", icon: Store },
   { label: "Conveners", href: "/dashboard/conveners", icon: Users },
+  // Same tier as Vendor Moderation — not super-admin-gated.
+  { label: "Groups", href: "/dashboard/groups", icon: UsersRound },
   { label: "Ticketing", href: "/dashboard/ticketing", icon: Ticket },
   { label: "Revenue", href: "/dashboard/revenue", icon: Wallet },
   // Settlement visibility is oversight, not a money-movement action or the

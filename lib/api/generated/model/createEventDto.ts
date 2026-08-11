@@ -7,6 +7,7 @@
  */
 import type { CreateEventDtoCategory } from './createEventDtoCategory';
 import type { CreateEventDtoType } from './createEventDtoType';
+import type { CreateEventDtoVisibility } from './createEventDtoVisibility';
 
 export interface CreateEventDto {
   name: string;
@@ -28,4 +29,8 @@ export interface CreateEventDto {
   dressCode?: string;
   additionalInfo?: string;
   requiresApproval?: boolean;
+  /** Post this event under a group (caller must be OWNER/ADMIN of it) */
+  groupId?: string;
+  /** Only meaningful with groupId. Without a group the event is always PUBLIC. */
+  visibility?: CreateEventDtoVisibility;
 }

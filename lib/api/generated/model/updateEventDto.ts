@@ -7,6 +7,7 @@
  */
 import type { UpdateEventDtoCategory } from './updateEventDtoCategory';
 import type { UpdateEventDtoType } from './updateEventDtoType';
+import type { UpdateEventDtoVisibility } from './updateEventDtoVisibility';
 
 export interface UpdateEventDto {
   name?: string;
@@ -28,4 +29,8 @@ export interface UpdateEventDto {
   dressCode?: string;
   additionalInfo?: string;
   requiresApproval?: boolean;
+  /** Post this event under a group (caller must be OWNER/ADMIN of it) */
+  groupId?: string;
+  /** Only meaningful with groupId. Without a group the event is always PUBLIC. */
+  visibility?: UpdateEventDtoVisibility;
 }

@@ -34,6 +34,7 @@ import type {
   AdminControllerListConvenersParams,
   AdminControllerListDisputesParams,
   AdminControllerListEventsParams,
+  AdminControllerListGroupsParams,
   AdminControllerListSettlementsParams,
   AdminControllerListSosEventsParams,
   AdminControllerListTicketsParams,
@@ -46,7 +47,8 @@ import type {
   CreateDisputeMessageDto,
   ReasonDto,
   RefundPurchaseDto,
-  ResolveDisputeDto
+  ResolveDisputeDto,
+  SuspendGroupDto
 } from '.././model';
 
 import { customInstance } from '../../client';
@@ -3579,6 +3581,483 @@ export const useAdminControllerResolveDispute = <TError = unknown,
       > => {
 
       const mutationOptions = getAdminControllerResolveDisputeMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary List groups (filters: category, status, search)
+ */
+export type adminControllerListGroupsResponse200 = {
+  data: void
+  status: 200
+}
+    
+export type adminControllerListGroupsResponseSuccess = (adminControllerListGroupsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type adminControllerListGroupsResponse = (adminControllerListGroupsResponseSuccess)
+
+export const getAdminControllerListGroupsUrl = (params: AdminControllerListGroupsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/v1/admin/groups?${stringifiedParams}` : `/v1/admin/groups`
+}
+
+export const adminControllerListGroups = async (params: AdminControllerListGroupsParams, options?: RequestInit): Promise<adminControllerListGroupsResponse> => {
+  
+  return customInstance<adminControllerListGroupsResponse>(getAdminControllerListGroupsUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getAdminControllerListGroupsQueryKey = (params?: AdminControllerListGroupsParams,) => {
+    return [
+    `/v1/admin/groups`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getAdminControllerListGroupsQueryOptions = <TData = Awaited<ReturnType<typeof adminControllerListGroups>>, TError = unknown>(params: AdminControllerListGroupsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerListGroups>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminControllerListGroupsQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerListGroups>>> = ({ signal }) => adminControllerListGroups(params, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminControllerListGroups>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminControllerListGroupsQueryResult = NonNullable<Awaited<ReturnType<typeof adminControllerListGroups>>>
+export type AdminControllerListGroupsQueryError = unknown
+
+
+export function useAdminControllerListGroups<TData = Awaited<ReturnType<typeof adminControllerListGroups>>, TError = unknown>(
+ params: AdminControllerListGroupsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerListGroups>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminControllerListGroups>>,
+          TError,
+          Awaited<ReturnType<typeof adminControllerListGroups>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminControllerListGroups<TData = Awaited<ReturnType<typeof adminControllerListGroups>>, TError = unknown>(
+ params: AdminControllerListGroupsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerListGroups>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminControllerListGroups>>,
+          TError,
+          Awaited<ReturnType<typeof adminControllerListGroups>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminControllerListGroups<TData = Awaited<ReturnType<typeof adminControllerListGroups>>, TError = unknown>(
+ params: AdminControllerListGroupsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerListGroups>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List groups (filters: category, status, search)
+ */
+
+export function useAdminControllerListGroups<TData = Awaited<ReturnType<typeof adminControllerListGroups>>, TError = unknown>(
+ params: AdminControllerListGroupsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerListGroups>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminControllerListGroupsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+/**
+ * @summary Group detail: all fields incl. status, members, recent events
+ */
+export type adminControllerGetGroupResponse200 = {
+  data: void
+  status: 200
+}
+    
+export type adminControllerGetGroupResponseSuccess = (adminControllerGetGroupResponse200) & {
+  headers: Headers;
+};
+;
+
+export type adminControllerGetGroupResponse = (adminControllerGetGroupResponseSuccess)
+
+export const getAdminControllerGetGroupUrl = (id: string,) => {
+
+
+  
+
+  return `/v1/admin/groups/${id}`
+}
+
+export const adminControllerGetGroup = async (id: string, options?: RequestInit): Promise<adminControllerGetGroupResponse> => {
+  
+  return customInstance<adminControllerGetGroupResponse>(getAdminControllerGetGroupUrl(id),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getAdminControllerGetGroupQueryKey = (id?: string,) => {
+    return [
+    `/v1/admin/groups/${id}`
+    ] as const;
+    }
+
+    
+export const getAdminControllerGetGroupQueryOptions = <TData = Awaited<ReturnType<typeof adminControllerGetGroup>>, TError = unknown>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetGroup>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminControllerGetGroupQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminControllerGetGroup>>> = ({ signal }) => adminControllerGetGroup(id, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetGroup>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminControllerGetGroupQueryResult = NonNullable<Awaited<ReturnType<typeof adminControllerGetGroup>>>
+export type AdminControllerGetGroupQueryError = unknown
+
+
+export function useAdminControllerGetGroup<TData = Awaited<ReturnType<typeof adminControllerGetGroup>>, TError = unknown>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetGroup>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminControllerGetGroup>>,
+          TError,
+          Awaited<ReturnType<typeof adminControllerGetGroup>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminControllerGetGroup<TData = Awaited<ReturnType<typeof adminControllerGetGroup>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetGroup>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminControllerGetGroup>>,
+          TError,
+          Awaited<ReturnType<typeof adminControllerGetGroup>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminControllerGetGroup<TData = Awaited<ReturnType<typeof adminControllerGetGroup>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetGroup>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Group detail: all fields incl. status, members, recent events
+ */
+
+export function useAdminControllerGetGroup<TData = Awaited<ReturnType<typeof adminControllerGetGroup>>, TError = unknown>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminControllerGetGroup>>, TError, TData>>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminControllerGetGroupQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+/**
+ * @summary Delete a group (events detached, not deleted); audited
+ */
+export type adminControllerDeleteGroupResponse200 = {
+  data: void
+  status: 200
+}
+    
+export type adminControllerDeleteGroupResponseSuccess = (adminControllerDeleteGroupResponse200) & {
+  headers: Headers;
+};
+;
+
+export type adminControllerDeleteGroupResponse = (adminControllerDeleteGroupResponseSuccess)
+
+export const getAdminControllerDeleteGroupUrl = (id: string,) => {
+
+
+  
+
+  return `/v1/admin/groups/${id}`
+}
+
+export const adminControllerDeleteGroup = async (id: string, options?: RequestInit): Promise<adminControllerDeleteGroupResponse> => {
+  
+  return customInstance<adminControllerDeleteGroupResponse>(getAdminControllerDeleteGroupUrl(id),
+  {      
+    ...options,
+    method: 'DELETE'
+    
+    
+  }
+);}
+
+
+
+
+export const getAdminControllerDeleteGroupMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminControllerDeleteGroup>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminControllerDeleteGroup>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['adminControllerDeleteGroup'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminControllerDeleteGroup>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  adminControllerDeleteGroup(id,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminControllerDeleteGroupMutationResult = NonNullable<Awaited<ReturnType<typeof adminControllerDeleteGroup>>>
+    
+    export type AdminControllerDeleteGroupMutationError = unknown
+
+    /**
+ * @summary Delete a group (events detached, not deleted); audited
+ */
+export const useAdminControllerDeleteGroup = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminControllerDeleteGroup>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminControllerDeleteGroup>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getAdminControllerDeleteGroupMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Suspend a group (reason required); audited
+ */
+export type adminControllerSuspendGroupResponse200 = {
+  data: void
+  status: 200
+}
+    
+export type adminControllerSuspendGroupResponseSuccess = (adminControllerSuspendGroupResponse200) & {
+  headers: Headers;
+};
+;
+
+export type adminControllerSuspendGroupResponse = (adminControllerSuspendGroupResponseSuccess)
+
+export const getAdminControllerSuspendGroupUrl = (id: string,) => {
+
+
+  
+
+  return `/v1/admin/groups/${id}/suspend`
+}
+
+export const adminControllerSuspendGroup = async (id: string,
+    suspendGroupDto: SuspendGroupDto, options?: RequestInit): Promise<adminControllerSuspendGroupResponse> => {
+  
+  return customInstance<adminControllerSuspendGroupResponse>(getAdminControllerSuspendGroupUrl(id),
+  {      
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      suspendGroupDto,)
+  }
+);}
+
+
+
+
+export const getAdminControllerSuspendGroupMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminControllerSuspendGroup>>, TError,{id: string;data: SuspendGroupDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminControllerSuspendGroup>>, TError,{id: string;data: SuspendGroupDto}, TContext> => {
+
+const mutationKey = ['adminControllerSuspendGroup'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminControllerSuspendGroup>>, {id: string;data: SuspendGroupDto}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  adminControllerSuspendGroup(id,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminControllerSuspendGroupMutationResult = NonNullable<Awaited<ReturnType<typeof adminControllerSuspendGroup>>>
+    export type AdminControllerSuspendGroupMutationBody = SuspendGroupDto
+    export type AdminControllerSuspendGroupMutationError = unknown
+
+    /**
+ * @summary Suspend a group (reason required); audited
+ */
+export const useAdminControllerSuspendGroup = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminControllerSuspendGroup>>, TError,{id: string;data: SuspendGroupDto}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminControllerSuspendGroup>>,
+        TError,
+        {id: string;data: SuspendGroupDto},
+        TContext
+      > => {
+
+      const mutationOptions = getAdminControllerSuspendGroupMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * @summary Restore a suspended group; audited
+ */
+export type adminControllerRestoreGroupResponse200 = {
+  data: void
+  status: 200
+}
+    
+export type adminControllerRestoreGroupResponseSuccess = (adminControllerRestoreGroupResponse200) & {
+  headers: Headers;
+};
+;
+
+export type adminControllerRestoreGroupResponse = (adminControllerRestoreGroupResponseSuccess)
+
+export const getAdminControllerRestoreGroupUrl = (id: string,) => {
+
+
+  
+
+  return `/v1/admin/groups/${id}/restore`
+}
+
+export const adminControllerRestoreGroup = async (id: string, options?: RequestInit): Promise<adminControllerRestoreGroupResponse> => {
+  
+  return customInstance<adminControllerRestoreGroupResponse>(getAdminControllerRestoreGroupUrl(id),
+  {      
+    ...options,
+    method: 'PATCH'
+    
+    
+  }
+);}
+
+
+
+
+export const getAdminControllerRestoreGroupMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminControllerRestoreGroup>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminControllerRestoreGroup>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['adminControllerRestoreGroup'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminControllerRestoreGroup>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  adminControllerRestoreGroup(id,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminControllerRestoreGroupMutationResult = NonNullable<Awaited<ReturnType<typeof adminControllerRestoreGroup>>>
+    
+    export type AdminControllerRestoreGroupMutationError = unknown
+
+    /**
+ * @summary Restore a suspended group; audited
+ */
+export const useAdminControllerRestoreGroup = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminControllerRestoreGroup>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customInstance>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminControllerRestoreGroup>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getAdminControllerRestoreGroupMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

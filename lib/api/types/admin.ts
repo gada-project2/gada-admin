@@ -647,3 +647,85 @@ export interface AdminPurchaseDetail {
   id: string;
   refund: AdminPurchaseRefundState;
 }
+
+// ─── Groups (moderation) ────────────────────────────────────────────────────────
+// GET /v1/admin/groups (list, filters: category/status/search),
+// GET /v1/admin/groups/{id} (detail: all fields + members + recent events),
+// PATCH .../suspend (reason REQUIRED, min 3 / max 500 chars — stricter than
+// Event moderation's optional reason, deliberately: no precedent to preserve
+// for a brand-new moderation surface), PATCH .../restore, DELETE (events are
+// detached — groupId set null, visibility reset to PUBLIC — never deleted).
+// Verified against source (AdminService.listGroups/getGroup/suspendGroup/
+// restoreGroup/deleteGroup, SuspendGroupDto, prisma schema) 2026-08-11.
+
+export type GroupCategory =
+  | 'OUTDOORS'
+  | 'FITNESS'
+  | 'GAMES'
+  | 'BOOKS'
+  | 'SPORTS'
+  | 'ARTS'
+  | 'FOOD'
+  | 'FAITH'
+  | 'BUSINESS'
+  | 'OTHER';
+
+export type GroupRole = 'OWNER' | 'ADMIN' | 'MEMBER';
+export type GroupStatus = 'ACTIVE' | 'SUSPENDED';
+
+export interface GroupCreator {
+  id: string;
+  displayName: string | null;
+  email: string;
+}
+
+export interface GroupListRow {
+  id: string;
+  name: string;
+  description: string | null;
+  category: GroupCategory;
+  status: GroupStatus;
+  photoKey: string | null;
+  createdByUserId: string;
+  createdBy: GroupCreator | null;
+  memberCount: number;
+  followerCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GroupListResponse {
+  data: GroupListRow[];
+  meta: PaginationMeta;
+}
+
+export interface GroupMemberUser {
+  id: string;
+  displayName: string | null;
+  photoKey: string | null;
+}
+
+export interface GroupMemberRow {
+  id: string;
+  groupId: string;
+  userId: string;
+  role: GroupRole;
+  joinedAt: string;
+  user: GroupMemberUser | null;
+}
+
+// The 10 MOST RECENT events posted under this group (getGroup uses take:10),
+// NOT the full list of the group's events.
+export interface GroupEventSummary {
+  id: string;
+  name: string;
+  status: AdminEventStatus;
+  visibility: 'PUBLIC' | 'MEMBERS_ONLY' | string;
+  startDate: string;
+  createdAt: string;
+}
+
+export interface GroupDetail extends GroupListRow {
+  members: GroupMemberRow[];
+  events: GroupEventSummary[];
+}
